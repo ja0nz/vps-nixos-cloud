@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#MISE description="Start or Update dev VM"
+
+# === Check if the VM is already running by probing the SSH port ===
+if ! nc -z localhost "$SSH_PORT" 2>/dev/null; then
+    echo "🌐 SSH port $SSH_PORT is closed. Starting a new VM..."
+
+    # 🚀 Starting local VM...
+    echo "This will start a NixOS VM with your configuration"
+    echo "The VM will be accessible at:"
+    echo "    SSH    : mise r //proxy:login-local"
+    echo "    HTTP(S): via cloudflare tunnel (TODO set routes via CF Dashboard)"
+    echo ""
+
+    # Go to the real secret directory
+    cd -P "$MISE_PROJECT_ROOT/secrets"
+
+    # Create temp directory if it doesn't exist
+    mkdir -p "temp"
+
+    # Add placeholder files to git (one-time, safe if already added)
+    touch temp/ssh_host_ed25519_key
+    git add -f temp/ssh_host_ed25519_key 2>/dev/null || true
+
+    # Extract Private Key
+    sops -d --extract '["ssh_host_ed25519_key"]' "secrets.enc.yaml" \
+        > "temp/ssh_host_ed25519_key"
+
+    # Mark files as assume-unchanged so they won't be committed with real content
+    git update-index --assume-unchanged temp/ssh_host_ed25519_key
+
+    nix run $MISE_PROJECT_ROOT#dev-local
+else
+    echo "✅ VM is already running on port $SSH_PORT. Switching configuration..."
+
+    # --- Original switch-vm logic ---
+    # Build the VM configuration on the host
+    echo "🔨 Building VM configuration..."
+    TARGET_PATH=$(nix build --no-substitute $MISE_PROJECT_ROOT#nixosConfigurations.dev-local.config.system.build.toplevel --print-out-paths)
+
+    if [ -z "$TARGET_PATH" ]; then
+        echo "❌ Build failed"
+        exit 1
+    fi
+
+    echo "🚀 Switching running VM to: $TARGET_PATH"
+
+    # Extracting the remote SSH key with sops
+    KEY_PATH=$(mktemp)
+    trap 'rm -f "$KEY_PATH"' EXIT
+    chmod 600 "$KEY_PATH"
+    sops -d --extract '["id_ed25519"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \
+        > "$KEY_PATH"
+
+    # Run the switch command inside the VM via SSH
+    # We use the -t flag for SSH to ensure sudo has a tty if needed
+    ssh -o IdentitiesOnly=yes \
+        -o UserKnownHostsFile=/dev/null \
+        -o StrictHostKeyChecking=no \
+        -p "$SSH_PORT" \
+        -i "$KEY_PATH" \
+        $USER@localhost \
+        "sudo $TARGET_PATH/bin/switch-to-configuration switch"
+fi

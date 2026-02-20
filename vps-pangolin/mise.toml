@@ -1,0 +1,17 @@
+[env]
+_.file = "env.json"
+
+[tools]
+# For tools reference ../mise.toml
+
+[hooks]
+enter = '''
+    echo "🌥️  Pangolin Proxy VPS"
+    echo $MISE_PROJECT_ROOT
+    echo ""
+    echo "Available commands:"
+    mise tasks
+    echo ""
+    echo "Run them with 'mise r name'"
+    echo ""
+'''
