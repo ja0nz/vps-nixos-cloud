@@ -12,12 +12,6 @@
   ...
 }:
 
-let
-  cfOriginPullCA = builtins.fetchurl {
-    url = "https://developers.cloudflare.com/ssl/static/authenticated_origin_pull_ca.pem";
-    sha256 = "0hxqszqfzsbmgksfm6k0gp0hsx9k1gqx24gakxqv0391wl6fsky1";
-  };
-in
 {
   sops.secrets."cf_api_email" = { };
   sops.secrets."cf_dns_api_token" = { };
@@ -70,14 +64,5 @@ in
     environmentFiles = [
       config.sops.templates."traefik.env".path
     ];
-    dynamicConfigOptions = {
-      tls.options.default = {
-        sniStrict = true;
-        clientAuth = {
-          caFiles = [ "${cfOriginPullCA}" ];
-          clientAuthType = "RequireAndVerifyClientCert";
-        };
-      };
-    };
   };
 }
