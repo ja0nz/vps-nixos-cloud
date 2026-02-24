@@ -63,6 +63,7 @@ if ssh -i "$KEY_PATH" \
     nixos-rebuild switch \
         --flake "$MISE_PROJECT_ROOT#prod-remote" \
         --target-host "$USER@$REMOTE_IP4" \
+        --build-host "$USER@$REMOTE_IP4" \
         --sudo
 
 else
@@ -70,7 +71,7 @@ else
     echo "🐣 Fresh VPS detected. Initializing with nixos-anywhere..."
     nix run github:nix-community/nixos-anywhere -- \
         --flake "$MISE_PROJECT_ROOT#prod-remote" \
-        --target-host "root@$REMOTE_IP4" \
+        --target-host "ubuntu@$REMOTE_IP4" \
         --ssh-port 22 \
         -i "$KEY_PATH" \
         --extra-files "$EXTRA_FILES" \

@@ -10,6 +10,8 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     microvm.url = "github:microvm-nix/microvm.nix";
     microvm.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
     quadlet-nix.url = "github:SEIAROTg/quadlet-nix";
   };
 
@@ -27,12 +29,19 @@
     }:
     let
       system = "x86_64-linux";
+      specialArgs = {
+        inherit inputs;
+        vars = builtins.fromJSON (builtins.readFile ./env.json);
+      };
 
       sharedModules = [
         ./shared-modules/base.nix
-        # ./modules/containers.nix
+        ./modules/newt.nix
+        ./modules/containers.nix
         inputs.sops-nix.nixosModules.sops
         inputs.quadlet-nix.nixosModules.quadlet
+        inputs.home-manager.nixosModules.home-manager
+        { home-manager.extraSpecialArgs = specialArgs; }
       ];
 
       mkConfig =
@@ -42,9 +51,7 @@
         }:
         nixpkgs.lib.nixosSystem {
           inherit system;
-          specialArgs = {
-            vars = builtins.fromJSON (builtins.readFile ./env.json);
-          };
+          inherit specialArgs;
           modules = sharedModules ++ extraModules;
         };
     in
@@ -57,9 +64,39 @@
       nixosConfigurations.dev-local = mkConfig {
         extraModules = [
           inputs.microvm.nixosModules.microvm
-          ./modules/newt.nix
           ./modules/cloudflared.nix
           ./shared-modules/microvm-configuration.nix
+
+          # Special Development settings
+          (
+            { ... }:
+            {
+              microvm = {
+                # Home Manager
+                writableStoreOverlay = "/nix/.rw-store";
+                # Podman user
+                volumes = [
+                  {
+                    mountPoint = "/home/containers";
+                    image = "./.home-container.img";
+                    size = 1000; # 1000MB
+                  }
+                ];
+              };
+              systemd.services.fix-container-home-permissions = {
+                script = ''
+                  chown -R containers:users /home/containers
+                  chmod 700 /home/containers
+                '';
+                wantedBy = [ "multi-user.target" ];
+                before = [ "home-manager-containers.service" ]; # Run BEFORE HM tries to link files
+                serviceConfig = {
+                  Type = "oneshot";
+                  RemainAfterExit = true;
+                };
+              };
+            }
+          )
         ];
       };
 

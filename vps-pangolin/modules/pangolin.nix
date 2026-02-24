@@ -31,10 +31,6 @@
     '';
   };
 
-  networking.firewall.allowedTCPPorts = [
-    80
-    443
-  ];
   security.acme.defaults.email = "acme.visible258@aleeas.com";
   services.pangolin = {
     enable = true;
@@ -68,7 +64,5 @@
     environmentFiles = [
       config.sops.templates."traefik.env".path
     ];
-    # Current bug
-    # dynamic.dir = "/var/lib/pangolin/traefik/dynamic";
   };
 }

@@ -4,34 +4,64 @@
   * Detailed info:
 */
 {
-  pkgs,
+  config,
+  vars,
   ...
 }:
 
+let
+  homelab = {
+    site = "wavy-alpine-chipmunk";
+    hostname = "localhost";
+    method = "http";
+    port = 80;
+  };
+in
 {
-  environment.systemPackages = with pkgs; [
-    fosrl-newt
-  ];
-  # services.newt = {
-  #   enable = true;
-  #   blueprint = {
-  #     # proxy-resources = {
-  #     #   jellyfin = {
-  #     #     auth = {
-  #     #       sso-enabled = true;
-  #     #     };
-  #     #     full-domain = "jfn.example.com";
-  #     #     name = "Jellyfin";
-  #     #     protocol = "http";
-  #     #     targets = [
-  #     #       {
-  #     #         hostname = "localhost";
-  #     #         method = "http";
-  #     #         port = 8096;
-  #     #       }
-  #     #     ];
-  #     #   };
-  #     # };
-  #   };
-  # };
+  sops.secrets."newt_id" = {
+    sopsFile = ../secrets/homelab.enc.yaml;
+  };
+  sops.secrets."newt_secret" = {
+    sopsFile = ../secrets/homelab.enc.yaml;
+  };
+  sops.templates."newt.env" = {
+    content = ''
+      NEWT_ID=${config.sops.placeholder."newt_id"}
+      NEWT_SECRET=${config.sops.placeholder."newt_secret"}
+    '';
+  };
+
+  services.newt = {
+    enable = true;
+    settings = {
+      endpoint = "https://pangolin.${vars.DOMAIN}";
+    };
+    environmentFile = config.sops.templates."newt.env".path;
+    blueprint = {
+      public-resources = {
+        dashboard = {
+          name = "Traefik Dashboard";
+          full-domain = "traefik.${vars.DOMAIN}";
+          protocol = "http";
+          auth = {
+            sso-enabled = true;
+          };
+          targets = [
+            {
+              site = "wavy-alpine-chipmunk";
+              hostname = "localhost";
+              method = "http";
+              port = 8080;
+            }
+          ];
+        };
+        whoami = {
+          name = "Whoami test page";
+          full-domain = "whoami.${vars.DOMAIN}";
+          protocol = "http";
+          targets = [ homelab ];
+        };
+      };
+    };
+  };
 }

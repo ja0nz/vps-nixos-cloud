@@ -60,16 +60,16 @@
     jcu = "journalctl -u";
     p = "sudo podman";
     root = "sudo -s";
+    containers = "sudo machinectl shell containers@";
     pr = "sudo podman exec -ti";
     ".." = "cd ..";
   };
 
-  # User for running containers
+  # User for ssh login
   users.users.${vars.USER} = {
     isNormalUser = true;
     uid = 1000;
-    linger = true;
-    description = "Container User";
+    description = "User for ssh login";
     extraGroups = [
       "wheel"
     ];

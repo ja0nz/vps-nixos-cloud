@@ -1,17 +1,12 @@
 # .sops.yaml
 # Prod Key -> will be pushed remote
 keys:
-  - &prod_key age1kfqxq9udhyd5ccnegtev7tldsxcahjk5azr9e52y4x2z68cw9a4qz2q068
+  - &prod_key age15gumguzhjtg6qapkww4j7u7j0hnmg4td4y0g97yrae6c48xxc5tsdwty88
   - &ja0nz_key age186szpazmh9k0h2pyeuuzpzs4mdpd4rpucx9df3csaz7f5l6n2e3q8p8xaq
 
 creation_rules:
-  - path_regex: secrets/secrets.enc.yaml$
+  - path_regex: secrets/.*\.enc\.yaml$
     key_groups:
       - age:
           - *prod_key
-          - *ja0nz_key
-
-  - path_regex: secrets/prod.keys.txt$
-    key_groups:
-      - age:
           - *ja0nz_key

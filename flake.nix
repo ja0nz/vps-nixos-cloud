@@ -23,6 +23,8 @@
           tombi
           bash-language-server
           nixd
+          # Connect to Pangolin instance
+          pangolin-cli
         ];
         shellHook = ''
           echo "Mise environment active"

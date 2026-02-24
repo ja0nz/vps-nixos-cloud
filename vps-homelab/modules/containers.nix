@@ -1,57 +1,65 @@
 {
-  pkgs,
   ...
 }:
 
 let
-  # Caddy helper
-  port = {
-    tinyauth = "3000";
-    whoami = "8081";
-    wordpress = "8082";
-    azurecast = "8083";
-  };
+  quadlets = [
+    ./container/whoami.nix
+    ./container/traefik.nix
+  ];
 in
 {
-  imports = [
-    ./whoami
-    #  ./tinyauth
-    #  ./wordpress
-    #  ./azurecast
-  ];
-  _module.args = { inherit port; };
+  # Binding to port 80
+  boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 80;
+  # services = {
+  #   dnsmasq = {
+  #     enable = true;
+  #     settings = {
+  #       address = "/.${config.networking.hostName}/127.0.0.1";
+  #     };
+  #   };
+  #   resolved = {
+  #     enable = true;
+  #     settings.Resolve.DNSStubListener = "no";
+  #   };
+  # };
 
-  # --- GLOBAL SETTINGS ---
-  services.caddy = {
-    enable = true;
-    email = "radio.pepper.cert@ja.nz";
-    extraConfig = ''
-      (tinyauth_forwarder) {
-        forward_auth localhost:${port.tinyauth} {
-          uri /api/auth/caddy
-        }
-      }
-
-      # Example of how to use the snippet in VirtualHosts extraConfig:
-      #   import tinyauth_forwarder
-      #   reverse_proxy localhost:8080
-    '';
-  };
-
+  # Enable quadlet-nix
   virtualisation.quadlet = {
     enable = true;
-    autoUpdate = true;
-    calendar = "monthly";
+    autoUpdate = {
+      enable = true;
+      calendar = "monthly";
+    };
   };
+  # Prune podman
   virtualisation.podman.autoPrune.enable = true;
 
-  # --- GLOBAL NETWORK ---
-  systemd.services.create-default-network = {
-    serviceConfig.Type = "oneshot";
-    wantedBy = [ "multi-user.target" ];
-    script = ''
-      ${pkgs.podman}/bin/podman network exists podman || \
-      ${pkgs.podman}/bin/podman network create podman
-    '';
+  # Container runner
+  users.users.containers = {
+    isNormalUser = true;
+    uid = 1001;
+    linger = true;
+    autoSubUidGidRange = true;
   };
+
+  home-manager.users.containers =
+    {
+      inputs,
+      osConfig,
+      lib,
+      ...
+    }:
+
+    {
+      home.stateVersion = osConfig.system.stateVersion;
+      systemd.user.services.podman-user-wait-network-online = {
+        Install.WantedBy = lib.mkForce [ ];
+      };
+
+      imports = [
+        inputs.quadlet-nix.homeManagerModules.quadlet
+      ]
+      ++ quadlets;
+    };
 }

@@ -13,15 +13,15 @@
       # Applications - might need different user:group
       "/var/lib/containers" # Your Podman images and volumes
       {
-        directory = "/var/lib/pangolin";
+        directory = "/var/lib/pangolin/config";
         user = "pangolin";
         group = "fossorial";
       }
-      {
-        directory = "/var/lib/traefik";
-        user = "traefik";
-        group = "traefik";
-      }
+      # {
+      #   directory = "/var/lib/traefik";
+      #   user = "traefik";
+      #   group = "traefik";
+      # }
     ];
     files = [
       "/etc/machine-id" # CRITICAL for journald and network logs
