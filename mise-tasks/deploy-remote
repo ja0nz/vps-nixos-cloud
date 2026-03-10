@@ -47,19 +47,13 @@ chmod 600 "$KEY_PATH"
 
 # === 5. Probe: Determine if NixOS is already running ===
 echo "🔍 Probing $REMOTE_IP4 for environment state..."
-if ssh -i "$KEY_PATH" \
-       -p "$SSH_PORT" \
-       -o ConnectTimeout=3 \
-       -o BatchMode=yes \
-       -o StrictHostKeyChecking=no \
-       -o UserKnownHostsFile=/dev/null \
-       "$USER@$REMOTE_IP4" true 2>/dev/null; then
 
+if ssh -i "$KEY_PATH" "$USER@$REMOTE_IP4" "[ -e /run/current-system ]"; then
     # --- 6a. Update: Run nixos-rebuild switch (In-place) ---
     echo "✅ NixOS detected. Updating via nixos-rebuild..."
 
     # Set the SSH options for the duration of this command
-    export NIX_SSHOPTS="-p $SSH_PORT -i $KEY_PATH"
+    export NIX_SSHOPTS="-i $KEY_PATH"
     nixos-rebuild switch \
         --flake "$MISE_PROJECT_ROOT#prod-remote" \
         --target-host "$USER@$REMOTE_IP4" \
@@ -72,7 +66,6 @@ else
     nix run github:nix-community/nixos-anywhere -- \
         --flake "$MISE_PROJECT_ROOT#prod-remote" \
         --target-host "ubuntu@$REMOTE_IP4" \
-        --ssh-port 22 \
         -i "$KEY_PATH" \
         --extra-files "$EXTRA_FILES" \
         --build-on remote

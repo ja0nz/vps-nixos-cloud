@@ -32,7 +32,7 @@ run = '''
 [tasks.ssh-remote]
 description = "Connect to remote VM"
 run = '''
-    # Connect SSH on port $SSH_PORT...
+    # Connect SSH...
 
     # === 1. Input: Get and confirm target IP ===
     while true; do
@@ -50,7 +50,7 @@ run = '''
     done
 
     echo "waiting for remote VM to accept connections..."
-    until nc -z $REMOTE_IP4 $SSH_PORT; do sleep 1; done
+    until nc -z $REMOTE_IP4; do sleep 1; done
 
     KEY_PATH=$(mktemp)
     trap 'rm -f "$KEY_PATH"' EXIT
@@ -59,7 +59,7 @@ run = '''
         > "$KEY_PATH"
     ssh -i "$KEY_PATH" \
         -o IdentitiesOnly=yes \
-        $USER@$REMOTE_IP4 -p $SSH_PORT
+        $USER@$REMOTE_IP4
 '''
 
 [tasks.cf-add-dns]

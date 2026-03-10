@@ -21,7 +21,7 @@
       enable = true;
       trustedInterfaces = [ "podman1" ];
       allowedTCPPorts = [
-        vars.SSH_PORT
+        22
       ];
     };
   };
@@ -29,9 +29,9 @@
   # SSH
   services.openssh = {
     enable = true;
-    ports = [
-      vars.SSH_PORT
-    ];
+    # ports = [
+    #   vars.SSH_PORT
+    # ];
     hostKeys = [
       {
         path = "/etc/ssh/ssh_host_ed25519_key";
