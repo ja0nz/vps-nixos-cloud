@@ -7,12 +7,12 @@ experimental_monorepo_root = true
 # ]
 
 [tasks.ssh-local]
-description = "Connect to local VM on port $SSH_PORT"
+description = "Connect to local VM on port $SSH_PORT_LOCAL"
 run = '''
-    # Connect SSH on port $SSH_PORT...
+    # Connect SSH on port $SSH_PORT_LOCAL...
 
     echo "waiting for local VM to accept connections..."
-    until nc -z localhost "$SSH_PORT"; do sleep 1; done
+    until nc -z localhost "$SSH_PORT_LOCAL"; do sleep 1; done
 
     # Extracting the remote SSH key with sops
     KEY_PATH=$(mktemp)
@@ -24,7 +24,7 @@ run = '''
     ssh -o IdentitiesOnly=yes \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
-        -p "$SSH_PORT" \
+        -p "$SSH_PORT_LOCAL" \
         -i "$KEY_PATH" \
         $USER@localhost
 '''

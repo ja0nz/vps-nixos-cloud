@@ -2,8 +2,8 @@
 #MISE description="Start or Update dev VM"
 
 # === Check if the VM is already running by probing the SSH port ===
-if ! nc -z localhost "$SSH_PORT" 2>/dev/null; then
-    echo "🌐 SSH port $SSH_PORT is closed. Starting a new VM..."
+if ! nc -z localhost "$SSH_PORT_LOCAL" 2>/dev/null; then
+    echo "🌐 SSH port $SSH_PORT_LOCAL is closed. Starting a new VM..."
 
     # 🚀 Starting local VM...
     echo "This will start a NixOS VM with your configuration"
@@ -31,7 +31,7 @@ if ! nc -z localhost "$SSH_PORT" 2>/dev/null; then
 
     nix run $MISE_PROJECT_ROOT#dev-local
 else
-    echo "✅ VM is already running on port $SSH_PORT. Switching configuration..."
+    echo "✅ VM is already running on port $SSH_PORT_LOCAL. Switching configuration..."
 
     # --- Original switch-vm logic ---
     # Build the VM configuration on the host
@@ -57,7 +57,7 @@ else
     ssh -o IdentitiesOnly=yes \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
-        -p "$SSH_PORT" \
+        -p "$SSH_PORT_LOCAL" \
         -i "$KEY_PATH" \
         $USER@localhost \
         "sudo $TARGET_PATH/bin/switch-to-configuration switch"

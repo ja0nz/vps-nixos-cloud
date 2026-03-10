@@ -27,7 +27,7 @@
   microvm = {
     hypervisor = "qemu";
     socket = "control.socket";
-    vsock.cid = vars.SSH_PORT; # Has to be unique anyway
+    vsock.cid = vars.SSH_PORT_LOCAL; # Has to be unique anyway
     volumes = [
       {
         mountPoint = "/var/lib";
@@ -55,8 +55,8 @@
     forwardPorts = [
       {
         from = "host";
-        host.port = vars.SSH_PORT;
-        guest.port = vars.SSH_PORT;
+        host.port = vars.SSH_PORT_LOCAL;
+        guest.port = 22;
       }
     ];
 
