@@ -29,6 +29,7 @@
 
       sharedModules = [
         ./shared-modules/base.nix
+        ./shared-modules/backrest.nix
         inputs.sops-nix.nixosModules.sops
       ];
 

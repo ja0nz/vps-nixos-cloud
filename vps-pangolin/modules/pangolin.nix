@@ -13,6 +13,14 @@
 }:
 
 {
+
+  # Backup pangolin configs
+  services.shared-backrest = {
+    enable = true;
+    extraPaths = [ "/var/lib/pangolin" ];
+    extraGroups = [ "fossorial" ];
+  };
+
   sops.secrets."cf_api_email" = { };
   sops.secrets."cf_dns_api_token" = { };
   sops.templates."traefik.env" = {
