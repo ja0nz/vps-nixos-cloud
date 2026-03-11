@@ -17,6 +17,11 @@
         user = "pangolin";
         group = "fossorial";
       }
+      {
+        directory = "/var/lib/backrest";
+        user = "backrest";
+        group = "backrest";
+      }
       # {
       #   directory = "/var/lib/traefik";
       #   user = "traefik";
