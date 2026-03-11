@@ -50,7 +50,7 @@ run = '''
     done
 
     echo "waiting for remote VM to accept connections..."
-    until nc -z $REMOTE_IP4; do sleep 1; done
+    until nc -z $REMOTE_IP4 22; do sleep 1; done
 
     KEY_PATH=$(mktemp)
     trap 'rm -f "$KEY_PATH"' EXIT
