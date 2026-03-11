@@ -26,6 +26,9 @@
     };
   };
 
+  # Swap
+  zramSwap.enable = true;
+
   # SSH
   services.openssh = {
     enable = true;
