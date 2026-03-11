@@ -1,5 +1,11 @@
+/**
+  Module: backrest.nix
+  Description: A remote and encrypted backup service based on restic
+  * Detailed info:
+  - Permissions: chown backrest:backrest
+  - Persist & Backup: /var/lib/backrest
+*/
 {
-  config,
   pkgs,
   ...
 }:
