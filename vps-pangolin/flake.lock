@@ -20,6 +20,19 @@
         "type": "github"
       }
     },
+    "geolite2-db": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772793015,
+        "narHash": "sha256-9nLSnBNlf45OXI6+5/Dcw/2s2xX4jgoBJqmGlYnVqlQ=",
+        "type": "tarball",
+        "url": "https://github.com/GitSquared/node-geolite2-redist/raw/refs/heads/master/redist/GeoLite2-Country.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/GitSquared/node-geolite2-redist/raw/refs/heads/master/redist/GeoLite2-Country.tar.gz"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -116,6 +129,7 @@
     "root": {
       "inputs": {
         "disko": "disko",
+        "geolite2-db": "geolite2-db",
         "impermanence": "impermanence",
         "microvm": "microvm",
         "nixpkgs": "nixpkgs_2",

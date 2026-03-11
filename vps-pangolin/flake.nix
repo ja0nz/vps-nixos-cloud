@@ -10,6 +10,10 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     microvm.url = "github:microvm-nix/microvm.nix";
     microvm.inputs.nixpkgs.follows = "nixpkgs";
+    geolite2-db = {
+      url = "https://github.com/GitSquared/node-geolite2-redist/raw/refs/heads/master/redist/GeoLite2-Country.tar.gz";
+      flake = false;
+    };
   };
 
   nixConfig = {
@@ -41,6 +45,7 @@
         nixpkgs.lib.nixosSystem {
           inherit system;
           specialArgs = {
+            inherit inputs;
             vars = builtins.fromJSON (builtins.readFile ./env.json);
           };
           modules = sharedModules ++ extraModules;

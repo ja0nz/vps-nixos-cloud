@@ -9,6 +9,7 @@
 {
   config,
   vars,
+  inputs,
   ...
 }:
 
@@ -43,6 +44,9 @@
         domain1 = {
           prefer_wildcard_cert = true;
         };
+      };
+      server = {
+        maxmind_db_path = "${inputs.geolite2-db}/GeoLite2-Country.mmdb";
       };
       # https://docs.pangolin.net/self-host/advanced/config-file#feature-flags
       flags = {

@@ -25,6 +25,7 @@
   systemd.services."serial-getty@ttyS0".enable = false;
 
   microvm = {
+    mem = 1024;
     hypervisor = "qemu";
     socket = "control.socket";
     vsock.cid = vars.SSH_PORT_LOCAL; # Has to be unique anyway
