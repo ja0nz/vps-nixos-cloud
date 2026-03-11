@@ -3,7 +3,7 @@
   Description: Tunneled reverse proxy server with identity and access control
   * Detailed info:
   - Permissions: chown pangolin:fossorial
-  - Persist: /var/lib/pangolin
+  - Persist & Backup: /var/lib/pangolin/config
   - Consumes: CF_DNS_API_TOKEN, CF_API_EMAIL, lets encrypt renew email
 */
 {
@@ -13,14 +13,6 @@
 }:
 
 {
-
-  # Backup pangolin configs
-  services.shared-backrest = {
-    enable = true;
-    extraPaths = [ "/var/lib/pangolin" ];
-    extraGroups = [ "fossorial" ];
-  };
-
   sops.secrets."cf_api_email" = { };
   sops.secrets."cf_dns_api_token" = { };
   sops.templates."traefik.env" = {
