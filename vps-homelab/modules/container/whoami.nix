@@ -10,6 +10,20 @@ let
   domain = "Host(`${name}.${vars.DOMAIN}`)";
 in
 {
+  # Define pangolin public-resources
+  # Options: ../containers.nix
+  hmOpts.pangolin.blueprints."${name}" = {
+    inherit name;
+    full-domain = "${name}.${vars.DOMAIN}";
+    protocol = "http";
+    targets = [
+      {
+        hostname = "localhost";
+        method = "http";
+        port = 80;
+      }
+    ];
+  };
 
   virtualisation.quadlet.networks."${publicNet}" = { };
   virtualisation.quadlet.containers.${name} = {

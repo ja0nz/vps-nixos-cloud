@@ -14,17 +14,13 @@ let
   dataDir = "/home/containers/.local/share/containers/storage/volumes";
 in
 {
-  # Impermanence dependency
-  # Either shared-modules/dev-opts.nix (stub) OR impermanence.nixosModules.impermanence
-  environment.persistence."/persist" = {
-    directories = [
-      {
-        directory = "${dataDir}";
-        user = "containers";
-        group = "users";
-      }
-    ];
-  };
+  sysOpts.persist.directories = [
+    {
+      directory = "${dataDir}";
+      user = "containers";
+      group = "users";
+    }
+  ];
 
   # Binding to port 80
   # ./container/traefik.nix
@@ -79,6 +75,16 @@ in
       imports = [
         inputs.quadlet-nix.homeManagerModules.quadlet
         inputs.sops-nix.homeManagerModules.sops
+        (
+          { lib, ... }:
+          {
+            options.hmOpts.pangolin.blueprints = lib.mkOption {
+              type = lib.types.attrsOf lib.types.anything;
+              default = { };
+              description = "Pangolin blueprint proxy-resources entries, merged from all home-manager modules.";
+            };
+          }
+        )
       ]
       ++ quadlets;
 

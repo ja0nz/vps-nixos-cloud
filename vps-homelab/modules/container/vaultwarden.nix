@@ -12,7 +12,6 @@ let
   domain = "Host(`${name}.${vars.DOMAIN}`)";
 in
 {
-
   sops.secrets."smtp_username" = { };
   sops.secrets."smtp_password" = { };
   sops.templates."vw.env" = {
@@ -29,6 +28,24 @@ in
       SMTP_USERNAME=${config.sops.placeholder."smtp_username"}
       SMTP_PASSWORD==${config.sops.placeholder."smtp_password"}
     '';
+  };
+
+  # Define pangolin public-resources
+  # Options: ../containers.nix
+  hmOpts.pangolin.blueprints."${name}" = {
+    inherit name;
+    full-domain = "${name}.${vars.DOMAIN}";
+    protocol = "http";
+    auth = {
+      sso-enabled = true;
+    };
+    targets = [
+      {
+        hostname = "localhost";
+        method = "http";
+        port = 80;
+      }
+    ];
   };
 
   virtualisation.quadlet.networks."${publicNet}" = { };

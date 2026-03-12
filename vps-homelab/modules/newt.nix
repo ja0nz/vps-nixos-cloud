@@ -9,13 +9,6 @@
   ...
 }:
 
-let
-  homelab = {
-    hostname = "localhost";
-    method = "http";
-    port = 80;
-  };
-in
 {
   sops.secrets."newt_id" = {
     sopsFile = ../secrets/homelab.enc.yaml;
@@ -37,23 +30,7 @@ in
     };
     environmentFile = config.sops.templates."newt.env".path;
     blueprint = {
-      public-resources = {
-        dashboard = {
-          name = "Traefik Dashboard";
-          full-domain = "traefik.${vars.DOMAIN}";
-          protocol = "http";
-          auth = {
-            sso-enabled = true;
-          };
-          targets = [ homelab ];
-        };
-        whoami = {
-          name = "Whoami test page";
-          full-domain = "whoami.${vars.DOMAIN}";
-          protocol = "http";
-          targets = [ homelab ];
-        };
-      };
+      public-resources = config.home-manager.users.containers.pangolin.blueprints;
     };
   };
 }
