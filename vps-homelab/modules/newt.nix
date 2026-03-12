@@ -30,7 +30,7 @@
     };
     environmentFile = config.sops.templates."newt.env".path;
     blueprint = {
-      public-resources = config.home-manager.users.containers.pangolin.blueprints;
+      public-resources = config.home-manager.users.containers.hmOpts.pangolin.blueprints;
     };
   };
 }
