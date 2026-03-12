@@ -11,7 +11,6 @@
 
 let
   homelab = {
-    site = "wavy-alpine-chipmunk";
     hostname = "localhost";
     method = "http";
     port = 80;
@@ -46,14 +45,7 @@ in
           auth = {
             sso-enabled = true;
           };
-          targets = [
-            {
-              site = "wavy-alpine-chipmunk";
-              hostname = "localhost";
-              method = "http";
-              port = 8080;
-            }
-          ];
+          targets = [ homelab ];
         };
         whoami = {
           name = "Whoami test page";
