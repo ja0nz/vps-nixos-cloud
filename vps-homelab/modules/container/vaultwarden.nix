@@ -26,7 +26,7 @@ in
       SMTP_FROM_NAME=${name}
       DISABLE_ADMIN_TOKEN=true
       SMTP_USERNAME=${config.sops.placeholder."smtp_username"}
-      SMTP_PASSWORD==${config.sops.placeholder."smtp_password"}
+      SMTP_PASSWORD=${config.sops.placeholder."smtp_password"}
     '';
   };
 
