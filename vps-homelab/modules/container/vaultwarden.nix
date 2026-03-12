@@ -63,7 +63,7 @@ in
       environmentFiles = [ config.sops.templates."vw.env".path ];
       networks = [ "${publicNet}" ];
       volumes = [
-        "${dataDir}:/data:Z"
+        "${dataDir}:/data"
       ];
       labels = {
         "traefik.enable" = "true";
