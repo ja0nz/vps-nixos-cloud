@@ -1,28 +1,21 @@
 {
+  pkgs,
   ...
 }:
 
 let
   quadlets = [
     ./container/whoami.nix
+    ./container/vaultwarden.nix
     ./container/traefik.nix
   ];
+  containersUID = 1001;
+  containersAge = "/var/lib/containers-secrets/sops/age";
 in
 {
   # Binding to port 80
+  # ./container/traefik.nix
   boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 80;
-  # services = {
-  #   dnsmasq = {
-  #     enable = true;
-  #     settings = {
-  #       address = "/.${config.networking.hostName}/127.0.0.1";
-  #     };
-  #   };
-  #   resolved = {
-  #     enable = true;
-  #     settings.Resolve.DNSStubListener = "no";
-  #   };
-  # };
 
   # Enable quadlet-nix
   virtualisation.quadlet = {
@@ -38,9 +31,22 @@ in
   # Container runner
   users.users.containers = {
     isNormalUser = true;
-    uid = 1001;
+    uid = containersUID;
     linger = true;
     autoSubUidGidRange = true;
+  };
+
+  # Derive age key from /etc/ssh/ssh_host_ed25519_key
+  system.activationScripts.deriveContainersAgeKey = {
+    text = ''
+      mkdir -p ${containersAge}
+      ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key \
+        -i /etc/ssh/ssh_host_ed25519_key \
+        -o ${containersAge}/keys.txt
+      chown -R ${toString containersUID} ${containersAge}
+      chmod 600 ${containersAge}/keys.txt
+    '';
+    deps = [ "etc" ];
   };
 
   home-manager.users.containers =
@@ -59,7 +65,14 @@ in
 
       imports = [
         inputs.quadlet-nix.homeManagerModules.quadlet
+        inputs.sops-nix.homeManagerModules.sops
       ]
       ++ quadlets;
+
+      sops = {
+        defaultSopsFormat = "yaml";
+        defaultSopsFile = ../secrets/homelab.enc.yaml;
+        age.keyFile = "${containersAge}/keys.txt";
+      };
     };
 }

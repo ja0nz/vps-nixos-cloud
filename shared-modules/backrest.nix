@@ -75,6 +75,7 @@ in
         "/etc/ssh"
         "/var/lib/nixos"
         "/var/lib/private"
+        "/var/lib/containers-secrets"
         "/var/db"
         "/var/cache"
         "/run/secrets"
