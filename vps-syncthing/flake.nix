@@ -29,6 +29,7 @@
 
       sharedModules = [
         ./shared-modules/base.nix
+        ./shared-modules/backrest.nix
         ./modules/syncthing.nix
         inputs.sops-nix.nixosModules.sops
       ];
@@ -55,6 +56,7 @@
       nixosConfigurations.dev-local = mkConfig {
         extraModules = [
           inputs.microvm.nixosModules.microvm
+          ./shared-modules/dev-opts.nix
           ./shared-modules/microvm-configuration.nix
           ./modules/cloudflared.nix
         ];

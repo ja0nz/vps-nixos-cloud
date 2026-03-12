@@ -36,6 +36,7 @@
 
       sharedModules = [
         ./shared-modules/base.nix
+        ./shared-modules/backrest.nix
         ./modules/newt.nix
         ./modules/containers.nix
         inputs.sops-nix.nixosModules.sops
@@ -64,6 +65,7 @@
       nixosConfigurations.dev-local = mkConfig {
         extraModules = [
           inputs.microvm.nixosModules.microvm
+          ./shared-modules/dev-opts.nix
           ./modules/cloudflared.nix
           ./shared-modules/microvm-configuration.nix
 

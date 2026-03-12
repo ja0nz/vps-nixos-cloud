@@ -32,9 +32,6 @@
   # SSH
   services.openssh = {
     enable = true;
-    # ports = [
-    #   vars.SSH_PORT
-    # ];
     hostKeys = [
       {
         path = "/etc/ssh/ssh_host_ed25519_key";

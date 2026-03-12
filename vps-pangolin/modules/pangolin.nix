@@ -13,7 +13,22 @@
   ...
 }:
 
+let
+  dataDir = "/var/lib/pangolin";
+in
 {
+  # Impermanence dependency
+  # Either shared-modules/dev-opts.nix (stub) OR impermanence.nixosModules.impermanence
+  environment.persistence."/persist" = {
+    directories = [
+      {
+        directory = "${dataDir}/config";
+        user = "pangolin";
+        group = "fossorial";
+      }
+    ];
+  };
+
   sops.secrets."cf_api_email" = { };
   sops.secrets."cf_dns_api_token" = { };
   sops.templates."traefik.env" = {
@@ -34,6 +49,7 @@
 
   security.acme.defaults.email = "acme.visible258@aleeas.com";
   services.pangolin = {
+    inherit dataDir;
     enable = true;
     openFirewall = true;
     baseDomain = vars.DOMAIN;

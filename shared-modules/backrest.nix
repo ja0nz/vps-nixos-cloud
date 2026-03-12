@@ -14,6 +14,18 @@ let
   dataDir = "/var/lib/backrest";
 in
 {
+  # Impermanence dependency
+  # Either shared-modules/dev-opts.nix (stub) OR impermanence.nixosModules.impermanence
+  environment.persistence."/persist" = {
+    directories = [
+      {
+        directory = dataDir;
+        user = "backrest";
+        group = "backrest";
+      }
+    ];
+  };
+
   systemd.tmpfiles.rules = [ "d '${dataDir}' 0700 backrest backrest - -" ];
 
   systemd.services.backrest = {
