@@ -58,6 +58,8 @@
     jcf = "journalctl -f";
     jcb = "journalctl -b";
     jcu = "journalctl -u";
+    jcuu = "journalctl --user -u";
+    jcuf = "journalctl --user -f -u";
     p = "sudo podman";
     root = "sudo -s";
     containers = "sudo machinectl shell containers@";

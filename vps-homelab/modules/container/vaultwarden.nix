@@ -6,7 +6,9 @@
 
 let
   name = "vault";
-  containerPort = "80";
+  publicNet = "vault-net";
+  dataDir = "vault-data";
+  containerPort = "8080";
   domain = "Host(`${name}.${vars.DOMAIN}`)";
 in
 {
@@ -16,6 +18,7 @@ in
   sops.templates."vw.env" = {
     content = ''
       DOMAIN=https://${name}.${vars.DOMAIN}
+      ROCKET_PORT=${containerPort}
       SIGNUPS_ALLOWED=false
 
       SMTP_HOST=mail.smtp2go.com
@@ -28,6 +31,8 @@ in
     '';
   };
 
+  virtualisation.quadlet.networks."${publicNet}" = { };
+  virtualisation.quadlet.volumes."${dataDir}" = { };
   virtualisation.quadlet.containers.${name} = {
     containerConfig = {
       image = "ghcr.io/dani-garcia/vaultwarden:latest";
@@ -35,7 +40,10 @@ in
       addCapabilities = [ ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."vw.env".path ];
-      networks = [ "podman" ];
+      networks = [ "${publicNet}" ];
+      volumes = [
+        "${dataDir}:/data:Z"
+      ];
       labels = {
         "traefik.enable" = "true";
         "traefik.http.routers.${name}.rule" = domain;

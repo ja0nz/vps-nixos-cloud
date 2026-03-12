@@ -11,8 +11,21 @@ let
   ];
   containersUID = 1001;
   containersAge = "/var/lib/containers-secrets/sops/age";
+  dataDir = "/home/containers/.local/share/containers/storage/volumes";
 in
 {
+  # Impermanence dependency
+  # Either shared-modules/dev-opts.nix (stub) OR impermanence.nixosModules.impermanence
+  environment.persistence."/persist" = {
+    directories = [
+      {
+        directory = "${dataDir}";
+        user = "containers";
+        group = "users";
+      }
+    ];
+  };
+
   # Binding to port 80
   # ./container/traefik.nix
   boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 80;
@@ -68,6 +81,14 @@ in
         inputs.sops-nix.homeManagerModules.sops
       ]
       ++ quadlets;
+
+      # virtualisation.quadlet.networks = {
+      #   immich-net-internal = {
+      #     networkConfig = {
+      #       internal = true;
+      #     };
+      #   };
+      # };
 
       sops = {
         defaultSopsFormat = "yaml";
