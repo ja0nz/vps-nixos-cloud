@@ -71,11 +71,11 @@ in
         "/etc/ssh"
         "/var/lib/nixos"
         "/var/lib/private"
-        "/var/lib/containers-secrets"
         "/var/db"
         "/var/cache"
-        "/run/secrets"
-        "/run/secrets.d"
+        "-/var/lib/containers-secrets"
+        "-/run/secrets"
+        "-/run/secrets.d"
       ];
 
       # Environment variables
