@@ -91,4 +91,37 @@
       ];
     }
   ];
+
+  imports = [
+    (
+      { lib, ... }:
+      {
+        options.sysOpts.persist.directories = lib.mkOption {
+          type = lib.types.listOf (
+            lib.types.submodule {
+              options = {
+                directory = lib.mkOption {
+                  type = lib.types.str;
+                };
+                user = lib.mkOption {
+                  type = lib.types.str;
+                  default = "root";
+                };
+                group = lib.mkOption {
+                  type = lib.types.str;
+                  default = "root";
+                };
+                mode = lib.mkOption {
+                  type = lib.types.str;
+                  default = "0700";
+                };
+              };
+            }
+          );
+          default = [ ];
+          description = "Define impermanence directories.";
+        };
+      }
+    )
+  ];
 }

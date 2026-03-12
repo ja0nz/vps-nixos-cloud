@@ -60,7 +60,6 @@
       nixosConfigurations.dev-local = mkConfig {
         extraModules = [
           inputs.microvm.nixosModules.microvm
-          ./shared-modules/dev-opts.nix
           ./shared-modules/microvm-configuration.nix
           ./modules/cloudflared.nix
 

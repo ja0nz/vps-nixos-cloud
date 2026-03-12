@@ -1,5 +1,6 @@
 {
   vars,
+  config,
   ...
 }:
 
@@ -10,7 +11,8 @@
       "/var/log"
       "/var/lib/nixos" # CRITICAL for User/Group ID consistency
       "/var/lib/systemd" # Keeps timers and back-end state
-    ];
+    ]
+    ++ config.sysOpts.persist.directories;
     files = [
       "/etc/machine-id" # CRITICAL for journald and network logs
       "/etc/ssh/ssh_host_ed25519_key"

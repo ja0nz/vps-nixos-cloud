@@ -13,17 +13,13 @@ let
   dataDir = "/var/lib/syncthing";
 in
 {
-  # Impermanence dependency
-  # Either shared-modules/dev-opts.nix (stub) OR impermanence.nixosModules.impermanence
-  environment.persistence."/persist" = {
-    directories = [
-      {
-        directory = "${dataDir}";
-        user = "syncthing";
-        group = "syncthing";
-      }
-    ];
-  };
+  sysOpts.persist.directories = [
+    {
+      directory = "${dataDir}";
+      user = "syncthing";
+      group = "syncthing";
+    }
+  ];
 
   services.syncthing = {
     inherit dataDir;
