@@ -29,6 +29,11 @@ in
         hostname = "localhost";
         method = "http";
         port = 80;
+        healthcheck = {
+          hostname= "localhost";
+          port = 80;
+          path = "/ping";
+        };
       }
     ];
   };
@@ -50,6 +55,8 @@ in
       };
       exec = [
         "--api=true"
+        "--ping=true"
+        "--ping.entrypoint=web"
         "--providers.docker=true"
         "--providers.docker.endpoint=unix:///var/run/docker.sock"
         "--providers.docker.exposedbydefault=false"
