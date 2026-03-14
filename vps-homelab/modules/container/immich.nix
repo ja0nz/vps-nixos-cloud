@@ -67,6 +67,11 @@ in
         hostname = "localhost";
         method = "http";
         port = 80;
+        healthcheck = {
+          hostname = "localhost";
+          port = 80;
+          path = "/api/server/ping";
+        };
       }
     ];
   };
@@ -131,10 +136,12 @@ in
       image = "docker.io/valkey/valkey:9";
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${internalNet}" ];
-      healthCmd = "redis-cli ping || exit 1";
-      healthRetries = 3;
+      healthCmd = "valkey-cli ping | grep -q PONG";
+      healthRetries = 2;
       healthInterval = "30s";
-      healthTimeout = "5s";
+      healthTimeout = "10s";
+      healthStartPeriod = "120s";
+      healthStartupInterval = "5s";
     };
   };
 

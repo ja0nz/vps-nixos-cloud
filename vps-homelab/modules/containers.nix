@@ -8,6 +8,7 @@ let
     ./container/whoami.nix
     ./container/vaultwarden.nix
     ./container/immich.nix
+    ./container/grist.nix
     ./container/traefik.nix
   ];
   containersUID = 1001;

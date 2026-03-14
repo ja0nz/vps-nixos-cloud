@@ -49,6 +49,11 @@ in
         hostname = "localhost";
         method = "http";
         port = 80;
+        healthcheck = {
+          hostname = "localhost";
+          port = 80;
+          path = "/alive";
+        };
       }
     ];
   };
