@@ -7,6 +7,7 @@ let
   quadlets = [
     ./container/whoami.nix
     ./container/vaultwarden.nix
+    ./container/immich.nix
     ./container/traefik.nix
   ];
   containersUID = 1001;

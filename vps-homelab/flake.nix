@@ -80,7 +80,7 @@
                   {
                     mountPoint = "/home/containers";
                     image = "./.home-container.img";
-                    size = 1000; # 1000MB
+                    size = 8000; # 8GB
                   }
                 ];
               };

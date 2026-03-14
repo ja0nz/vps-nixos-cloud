@@ -25,15 +25,16 @@
   systemd.services."serial-getty@ttyS0".enable = false;
 
   microvm = {
-    mem = 1024;
+    mem = 4096;
+    vcpu = 4;
     hypervisor = "qemu";
     socket = "control.socket";
     vsock.cid = vars.SSH_PORT_LOCAL; # Has to be unique anyway
     volumes = [
       {
-        mountPoint = "/var/lib";
-        image = "./.var-lib-dev.img";
-        size = 500; # 500MB
+        mountPoint = "/var/tmp";
+        image = "./.var-tmp-dev.img";
+        size = 2000; # 2GB
       }
     ];
     shares = [

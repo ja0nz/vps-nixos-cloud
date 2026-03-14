@@ -32,7 +32,7 @@ in
         method = "http";
         port = 80;
         healthcheck = {
-          hostname= "localhost";
+          hostname = "localhost";
           port = 80;
           path = "/ping";
         };
