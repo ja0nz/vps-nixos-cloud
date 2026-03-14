@@ -9,7 +9,6 @@ let
   id = "vaultwarden-server";
   subDomain = "vault";
   publicNet = "vault-net";
-  dataDir = "vault-data";
   containerPort = "8080";
   url = "Host(`${subDomain}.${vars.DOMAIN}`)";
 in
@@ -55,7 +54,7 @@ in
   };
 
   virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.volumes."${dataDir}" = { };
+  virtualisation.quadlet.volumes."${id}" = { };
   virtualisation.quadlet.containers.${id} = {
     containerConfig = {
       image = "ghcr.io/dani-garcia/vaultwarden:latest";
@@ -66,7 +65,7 @@ in
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${publicNet}" ];
       volumes = [
-        "${dataDir}:/data"
+        "${id}:/data"
       ];
       labels = {
         "traefik.enable" = "true";
