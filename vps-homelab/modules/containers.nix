@@ -9,6 +9,7 @@ let
     ./container/vaultwarden.nix
     ./container/immich.nix
     ./container/grist.nix
+    ./container/homepage.nix
     ./container/traefik.nix
   ];
   containersUID = 1001;
@@ -63,6 +64,7 @@ in
   home-manager.users.containers =
     {
       inputs,
+      config,
       osConfig,
       lib,
       ...
@@ -70,6 +72,7 @@ in
 
     {
       home.stateVersion = osConfig.system.stateVersion;
+      home.file."volumes".source = config.lib.file.mkOutOfStoreSymlink dataDir;
       systemd.user.services.podman-user-wait-network-online = {
         Install.WantedBy = lib.mkForce [ ];
       };

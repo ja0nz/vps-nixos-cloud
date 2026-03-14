@@ -15,7 +15,7 @@ in
 {
   sops.secrets."smtp_username" = { };
   sops.secrets."smtp_password" = { };
-  sops.templates."vw.env" = {
+  sops.templates."${id}.env" = {
     content = ''
       DOMAIN=https://${subDomain}.${vars.DOMAIN}
       ROCKET_PORT=${containerPort}
@@ -66,7 +66,7 @@ in
       dropCapabilities = [ "ALL" ];
       addCapabilities = [ ];
       noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."vw.env".path ];
+      environmentFiles = [ config.sops.templates."${id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${publicNet}" ];
       volumes = [
