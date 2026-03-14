@@ -11,15 +11,17 @@ let
   publicNetworks = lib.filterAttrs (_: net: (net.networkConfig.internal or null) != true) allNetworks;
   publicNetworkNames = lib.attrNames publicNetworks;
 
-  name = "traefik";
-  domain = "Host(`${name}.${vars.DOMAIN}`)";
+  id = "traefik-proxy";
+  subDomain = "traefik";
+  containerPort = "80";
+  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
 in
 {
   # Define pangolin public-resources
   # Options: ../containers.nix
-  hmOpts.pangolin.blueprints."${name}" = {
-    inherit name;
-    full-domain = "${name}.${vars.DOMAIN}";
+  hmOpts.pangolin.blueprints."${id}" = {
+    name = id;
+    full-domain = "${subDomain}.${vars.DOMAIN}";
     protocol = "http";
     auth = {
       sso-enabled = true;
@@ -42,16 +44,17 @@ in
     containerConfig = {
       image = "traefik:latest";
       publishPorts = [
-        "80:80"
+        "${containerPort}:${containerPort}"
       ];
       networks = publicNetworkNames;
+      environments.TZ = osConfig.time.timeZone;
       volumes = [
         "/run/user/${uid}/podman/podman.sock:/var/run/docker.sock:ro"
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${name}.rule" = domain;
-        "traefik.http.routers.${name}.service" = "api@internal";
+        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.service" = "api@internal";
       };
       exec = [
         "--api=true"
@@ -60,7 +63,7 @@ in
         "--providers.docker=true"
         "--providers.docker.endpoint=unix:///var/run/docker.sock"
         "--providers.docker.exposedbydefault=false"
-        "--entrypoints.web.address=:80"
+        "--entrypoints.web.address=:${containerPort}"
       ];
     };
   };

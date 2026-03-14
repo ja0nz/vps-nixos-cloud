@@ -1,20 +1,22 @@
 {
   vars,
+  osConfig,
   ...
 }:
 
 let
-  name = "whoami";
+  id = "whoami-server";
+  subDomain = "whoami";
   publicNet = "whoami-net";
   containerPort = "3993";
-  domain = "Host(`${name}.${vars.DOMAIN}`)";
+  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
 in
 {
   # Define pangolin public-resources
   # Options: ../containers.nix
-  hmOpts.pangolin.blueprints."${name}" = {
-    inherit name;
-    full-domain = "${name}.${vars.DOMAIN}";
+  hmOpts.pangolin.blueprints."${id}" = {
+    name = id;
+    full-domain = "${subDomain}.${vars.DOMAIN}";
     protocol = "http";
     targets = [
       {
@@ -26,18 +28,19 @@ in
   };
 
   virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.containers.${name} = {
+  virtualisation.quadlet.containers.${id} = {
     containerConfig = {
       image = "docker.io/traefik/whoami:latest";
       dropCapabilities = [ "ALL" ];
       addCapabilities = [ ];
       noNewPrivileges = true;
+      environments.TZ = osConfig.time.timeZone;
       environments.WHOAMI_PORT_NUMBER = containerPort;
       networks = [ "${publicNet}" ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${name}.rule" = domain;
-        "traefik.http.services.${name}.loadbalancer.server.port" = containerPort;
+        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };
   };

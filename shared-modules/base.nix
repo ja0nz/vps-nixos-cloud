@@ -5,6 +5,7 @@
 
 {
   system.stateVersion = "24.05";
+  time.timeZone = "Europe/Berlin";
 
   # SOPS-NIX
   sops = {

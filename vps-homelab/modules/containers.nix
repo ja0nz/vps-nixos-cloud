@@ -88,14 +88,6 @@ in
       ]
       ++ quadlets;
 
-      # virtualisation.quadlet.networks = {
-      #   immich-net-internal = {
-      #     networkConfig = {
-      #       internal = true;
-      #     };
-      #   };
-      # };
-
       sops = {
         defaultSopsFormat = "yaml";
         defaultSopsFile = ../secrets/homelab.enc.yaml;

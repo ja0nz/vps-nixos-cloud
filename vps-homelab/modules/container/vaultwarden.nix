@@ -1,22 +1,24 @@
 {
   vars,
   config,
+  osConfig,
   ...
 }:
 
 let
-  name = "vault";
+  id = "vaultwarden-server";
+  subDomain = "vault";
   publicNet = "vault-net";
   dataDir = "vault-data";
   containerPort = "8080";
-  domain = "Host(`${name}.${vars.DOMAIN}`)";
+  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
 in
 {
   sops.secrets."smtp_username" = { };
   sops.secrets."smtp_password" = { };
   sops.templates."vw.env" = {
     content = ''
-      DOMAIN=https://${name}.${vars.DOMAIN}
+      DOMAIN=https://${subDomain}.${vars.DOMAIN}
       ROCKET_PORT=${containerPort}
       ENABLE_WEBSOCKET=true
       SIGNUPS_ALLOWED=false
@@ -27,8 +29,8 @@ in
       SMTP_HOST=mail.smtp2go.com
       SMTP_PORT=2525
 
-      SMTP_FROM=${name}@${vars.DOMAIN}
-      SMTP_FROM_NAME=${name}
+      SMTP_FROM=${subDomain}@${vars.DOMAIN}
+      SMTP_FROM_NAME=${subDomain}
       SMTP_USERNAME=${config.sops.placeholder."smtp_username"}
       SMTP_PASSWORD=${config.sops.placeholder."smtp_password"}
     '';
@@ -36,9 +38,9 @@ in
 
   # Define pangolin public-resources
   # Options: ../containers.nix
-  hmOpts.pangolin.blueprints."${name}" = {
-    inherit name;
-    full-domain = "${name}.${vars.DOMAIN}";
+  hmOpts.pangolin.blueprints."${id}" = {
+    name = id;
+    full-domain = "${subDomain}.${vars.DOMAIN}";
     protocol = "http";
     auth = {
       sso-enabled = true;
@@ -54,21 +56,22 @@ in
 
   virtualisation.quadlet.networks."${publicNet}" = { };
   virtualisation.quadlet.volumes."${dataDir}" = { };
-  virtualisation.quadlet.containers.${name} = {
+  virtualisation.quadlet.containers.${id} = {
     containerConfig = {
       image = "ghcr.io/dani-garcia/vaultwarden:latest";
       dropCapabilities = [ "ALL" ];
       addCapabilities = [ ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."vw.env".path ];
+      environments.TZ = osConfig.time.timeZone;
       networks = [ "${publicNet}" ];
       volumes = [
         "${dataDir}:/data"
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${name}.rule" = domain;
-        "traefik.http.services.${name}.loadbalancer.server.port" = containerPort;
+        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };
   };
