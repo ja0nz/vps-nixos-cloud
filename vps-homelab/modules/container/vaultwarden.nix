@@ -17,6 +17,7 @@ in
   sops.secrets."smtp_password" = { };
   sops.templates."${id}.env" = {
     content = ''
+      # https://github.com/dani-garcia/vaultwarden/blob/main/.env.template
       DOMAIN=https://${url}
       ROCKET_PORT=${containerPort}
       ENABLE_WEBSOCKET=true

@@ -17,6 +17,7 @@ in
   sops.secrets."grist_session_password" = { };
   sops.templates."${id}.env" = {
     content = ''
+      # https://support.getgrist.com/self-managed/
       APP_HOME_URL=https://${url}
 
       GRIST_DEFAULT_EMAIL=hey@ja.nz
@@ -29,6 +30,7 @@ in
       GRIST_PAGE_TITLE_SUFFIX=
       GRIST_SESSION_SECRET=${config.sops.placeholder."grist_session_password"}
 
+      # https://support.getgrist.com/install/oidc/
       # GRIST_OIDC_IDP_ISSUER=
       # GRIST_OIDC_IDP_CLIENT_ID=
       # GRIST_OIDC_IDP_CLIENT_SECRET=

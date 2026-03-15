@@ -33,6 +33,7 @@ in
   sops.secrets."immich_db_password" = { };
   sops.templates."${id}.env" = {
     content = ''
+      # https://docs.immich.app/install/environment-variables/
       IMMICH_MACHINE_LEARNING_URL=http://${idML}:3003
       REDIS_HOSTNAME=${idRedis}
       DB_HOSTNAME=${idDB}

@@ -17,7 +17,7 @@ in
   sops.secrets."pID_enc_key" = { };
   sops.templates."${id}.env" = {
     content = ''
-      # https://pocket-id.org/docs/configuration/environment-variables
+      # https://pocket-id.org/docs/configuration/environment-variables/
       APP_URL=https://${url}
       ENCRYPTION_KEY=${config.sops.placeholder."pID_enc_key"}
       TRUST_PROXY=true
