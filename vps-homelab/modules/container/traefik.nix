@@ -40,9 +40,9 @@ in
     ];
   };
 
-  virtualisation.quadlet.containers.traefik = {
+  virtualisation.quadlet.containers.${id} = {
     containerConfig = {
-      image = "traefik:latest";
+      image = "docker.io/traefik:latest";
       publishPorts = [
         "${containerPort}:${containerPort}"
       ];
