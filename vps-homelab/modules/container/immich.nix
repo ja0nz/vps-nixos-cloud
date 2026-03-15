@@ -71,6 +71,12 @@ in
           hostname = "localhost";
           port = 80;
           path = "/api/server/ping";
+          headers = [
+            {
+              name = "Host";
+              value = "${subDomain}.${vars.DOMAIN}";
+            }
+          ];
         };
       }
     ];

@@ -80,6 +80,12 @@ in
           hostname = "localhost";
           port = 80;
           path = "/status";
+          headers = [
+            {
+              name = "Host";
+              value = "${subDomain}.${vars.DOMAIN}";
+            }
+          ];
         };
       }
     ];

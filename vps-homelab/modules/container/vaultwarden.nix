@@ -53,6 +53,12 @@ in
           hostname = "localhost";
           port = 80;
           path = "/alive";
+          headers = [
+            {
+              name = "Host";
+              value = "${subDomain}.${vars.DOMAIN}";
+            }
+          ];
         };
       }
     ];
