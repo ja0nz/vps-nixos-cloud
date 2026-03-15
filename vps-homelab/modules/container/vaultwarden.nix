@@ -28,9 +28,7 @@ in
 
       SMTP_HOST=mail.smtp2go.com
       SMTP_PORT=2525
-
       SMTP_FROM=${subDomain}@${vars.DOMAIN}
-      SMTP_FROM_NAME=${subDomain}
       SMTP_USERNAME=${config.sops.placeholder."smtp_username"}
       SMTP_PASSWORD=${config.sops.placeholder."smtp_password"}
     '';

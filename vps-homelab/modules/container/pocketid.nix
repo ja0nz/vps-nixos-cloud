@@ -14,11 +14,20 @@ let
   url = "${subDomain}.${vars.DOMAIN}";
 in
 {
+  sops.secrets."smtp_username" = { };
+  sops.secrets."smtp_password" = { };
   sops.secrets."pID_enc_key" = { };
   sops.templates."${id}.env" = {
     content = ''
       # https://pocket-id.org/docs/configuration/environment-variables/
       APP_URL=https://${url}
+
+      SMTP_HOST=mail.smtp2go.com
+      SMTP_PORT=2525
+      SMTP_FROM=${subDomain}@${vars.DOMAIN}
+      SMTP_USER=${config.sops.placeholder."smtp_username"}
+      SMTP_PASSWORD=${config.sops.placeholder."smtp_password"}
+
       ENCRYPTION_KEY=${config.sops.placeholder."pID_enc_key"}
       TRUST_PROXY=true
     '';
