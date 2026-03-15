@@ -6,33 +6,21 @@
 }:
 
 let
-  # Common
-  id = "grist-server";
-  subDomain = "calc";
-  publicNet = "grist-net";
-  containerPort = "8484";
+  id = "pocketid-auth";
+  subDomain = "auth";
+  publicNet = "auth-net";
+  versionTag = "v2";
+  containerPort = "1411";
   url = "${subDomain}.${vars.DOMAIN}";
 in
 {
-  sops.secrets."grist_session_password" = { };
+  sops.secrets."pID_enc_key" = { };
   sops.templates."${id}.env" = {
     content = ''
-      APP_HOME_URL=https://${url}
-
-      GRIST_DEFAULT_EMAIL=hey@ja.nz
-      GRIST_DEFAULT_LOCALE=de-DE
-      GRIST_LOG_LEVEL=warn
-      GRIST_SANDBOX_FLAVOR=gvisor
-      GRIST_SINGLE_ORG=immo
-      GRIST_HIDE_UI_ELEMENTS=helpCenter,billing,templates,multiSite,multiAccounts,supportGrist,sendToDrive
-      GRIST_FORCE_LOGIN=true
-      GRIST_PAGE_TITLE_SUFFIX=
-      GRIST_SESSION_SECRET=${config.sops.placeholder."grist_session_password"}
-
-      # GRIST_OIDC_IDP_ISSUER=
-      # GRIST_OIDC_IDP_CLIENT_ID=
-      # GRIST_OIDC_IDP_CLIENT_SECRET=
-      # GRIST_OIDC_IDP_END_SESSION_ENDPOINT=
+      # https://pocket-id.org/docs/configuration/environment-variables
+      APP_URL=https://${url}
+      ENCRYPTION_KEY=${config.sops.placeholder."pID_enc_key"}
+      TRUST_PROXY=true
     '';
   };
 
@@ -42,9 +30,6 @@ in
     name = id;
     full-domain = url;
     protocol = "http";
-    auth = {
-      sso-enabled = true;
-    };
     targets = [
       {
         hostname = "localhost";
@@ -53,7 +38,7 @@ in
         healthcheck = {
           hostname = "localhost";
           port = 80;
-          path = "/status";
+          path = "/healthz";
           headers = [
             {
               name = "Host";
@@ -69,22 +54,19 @@ in
   virtualisation.quadlet.volumes."${id}" = { };
   virtualisation.quadlet.containers.${id} = {
     containerConfig = {
-      image = "docker.io/gristlabs/grist:latest";
+      image = "ghcr.io/pocket-id/pocket-id:${versionTag}";
       dropCapabilities = [ "ALL" ];
       addCapabilities = [
         "SETUID"
         "SETGID"
         "CHOWN"
-        "DAC_OVERRIDE"
       ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."${id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-      ];
+      networks = [ "${publicNet}" ];
       volumes = [
-        "${id}:/persist"
+        "${id}:/app/data"
       ];
       labels = {
         "traefik.enable" = "true";
