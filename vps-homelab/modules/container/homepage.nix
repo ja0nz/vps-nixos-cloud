@@ -8,14 +8,13 @@ let
   id = "homepage-server";
   publicNet = "homepage-net";
   containerPort = "3000";
-  url = "Host(`${vars.DOMAIN}`)";
 in
 {
   # Define pangolin public-resources
   # Options: ../containers.nix
   hmOpts.pangolin.blueprints."${id}" = {
     name = id;
-    full-domain = "${vars.DOMAIN}";
+    full-domain = vars.DOMAIN;
     protocol = "http";
     auth = {
       sso-enabled = true;
@@ -45,7 +44,7 @@ in
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.rule" = "Host(`${vars.DOMAIN}`)";
         "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };

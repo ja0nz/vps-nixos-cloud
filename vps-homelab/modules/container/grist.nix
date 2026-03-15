@@ -11,13 +11,13 @@ let
   subDomain = "calc";
   publicNet = "grist-net";
   containerPort = "8484";
-  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
+  url = "${subDomain}.${vars.DOMAIN}";
 in
 {
   sops.secrets."grist_session_password" = { };
   sops.templates."${id}.env" = {
     content = ''
-      APP_HOME_URL=https://${subDomain}.${vars.DOMAIN}
+      APP_HOME_URL=https://${url}
 
       GRIST_DEFAULT_EMAIL=hey@ja.nz
       GRIST_DEFAULT_LOCALE=de-DE
@@ -40,7 +40,7 @@ in
   # Options: ../containers.nix
   hmOpts.pangolin.blueprints."${id}" = {
     name = id;
-    full-domain = "${subDomain}.${vars.DOMAIN}";
+    full-domain = url;
     protocol = "http";
     auth = {
       sso-enabled = true;
@@ -57,7 +57,7 @@ in
           headers = [
             {
               name = "Host";
-              value = "${subDomain}.${vars.DOMAIN}";
+              value = url;
             }
           ];
         };
@@ -89,7 +89,7 @@ in
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
         "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };

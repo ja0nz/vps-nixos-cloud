@@ -14,7 +14,7 @@ let
   id = "traefik-proxy";
   subDomain = "traefik";
   containerPort = "80";
-  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
+  url = "${subDomain}.${vars.DOMAIN}";
 in
 {
   # Define pangolin public-resources
@@ -53,7 +53,7 @@ in
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
         "traefik.http.routers.${id}.service" = "api@internal";
       };
       exec = [

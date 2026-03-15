@@ -9,14 +9,14 @@ let
   subDomain = "whoami";
   publicNet = "whoami-net";
   containerPort = "3993";
-  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
+  url = "${subDomain}.${vars.DOMAIN}";
 in
 {
   # Define pangolin public-resources
   # Options: ../containers.nix
   hmOpts.pangolin.blueprints."${id}" = {
     name = id;
-    full-domain = "${subDomain}.${vars.DOMAIN}";
+    full-domain = url;
     protocol = "http";
     targets = [
       {
@@ -39,7 +39,7 @@ in
       networks = [ "${publicNet}" ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
         "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };

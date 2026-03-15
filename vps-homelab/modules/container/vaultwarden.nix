@@ -10,14 +10,14 @@ let
   subDomain = "vault";
   publicNet = "vault-net";
   containerPort = "8080";
-  url = "Host(`${subDomain}.${vars.DOMAIN}`)";
+  url = "${subDomain}.${vars.DOMAIN}";
 in
 {
   sops.secrets."smtp_username" = { };
   sops.secrets."smtp_password" = { };
   sops.templates."${id}.env" = {
     content = ''
-      DOMAIN=https://${subDomain}.${vars.DOMAIN}
+      DOMAIN=https://${url}
       ROCKET_PORT=${containerPort}
       ENABLE_WEBSOCKET=true
       SIGNUPS_ALLOWED=false
@@ -39,7 +39,7 @@ in
   # Options: ../containers.nix
   hmOpts.pangolin.blueprints."${id}" = {
     name = id;
-    full-domain = "${subDomain}.${vars.DOMAIN}";
+    full-domain = url;
     protocol = "http";
     auth = {
       sso-enabled = true;
@@ -56,7 +56,7 @@ in
           headers = [
             {
               name = "Host";
-              value = "${subDomain}.${vars.DOMAIN}";
+              value = url;
             }
           ];
         };
@@ -80,7 +80,7 @@ in
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = url;
+        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
         "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
       };
     };
