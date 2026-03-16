@@ -1,13 +1,15 @@
 {
   vars,
   pkgs,
+  config,
   osConfig,
   ...
 }:
 
 let
   id = "nginx-server";
-  srv = "/home/containers/docs/build";
+  # Volumes is a custom symlink here!
+  srv = "${config.home.homeDirectory}/volumes/${id}/docs/build";
   subDomain = "docs";
   publicNet = "nginx-net";
   containerPort = "80";
@@ -30,19 +32,27 @@ in
   };
 
   virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.volumes."${srv}" = {
-    serviceConfig.ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p ${srv}";
+  virtualisation.quadlet.volumes."${id}" = {
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStartPost = "${pkgs.coreutils}/bin/mkdir -p ${srv}";
+    };
   };
   virtualisation.quadlet.containers.${id} = {
     containerConfig = {
       image = "docker.io/nginx:stable";
       dropCapabilities = [ "ALL" ];
-      addCapabilities = [ ];
+      addCapabilities = [
+        "SETUID"
+        "SETGID"
+        "CHOWN"
+        "CAP_NET_BIND_SERVICE"
+      ];
       noNewPrivileges = true;
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${publicNet}" ];
       volumes = [
-        "/home/containers/docs/build:/usr/share/nginx/html:ro"
+        "${srv}:/usr/share/nginx/html:ro"
       ];
       labels = {
         "traefik.enable" = "true";
