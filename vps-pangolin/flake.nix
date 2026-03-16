@@ -90,6 +90,7 @@
           ./shared-modules/vps-configuration.nix
           ./shared-modules/hardware-configuration.nix
           ./shared-modules/impermanence.nix
+          ./shared-modules/beszelagent.nix
         ];
       };
     };

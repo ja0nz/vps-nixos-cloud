@@ -3,6 +3,8 @@
   Description: Lightweight server monitoring hub with historical data, docker stats, and alerts
   * Detailed info:
   - Persist & Backup: /var/lib/private (done in impermanence anyway)
+  - See: shared-modules/beszelhub.nix
+  - IMPORTANT: In reverse proxy add rule to bypass: api/beszel/agent-connect
 */
 {
   ...
@@ -21,15 +23,3 @@ in
     };
   };
 }
-
-# TODO
-# # The Agent (Metrics Collector)
-# agent = {
-#   enable = true;
-#   smartmon.enable = true;
-#   openFirewall = false; # 45876 by default, via pangolin
-#   environment = {
-#     PORT = "45876";
-#     KEY = "ssh-ed25519 AAAA..."; # You get this from the Hub web UI
-#   };
-# };
