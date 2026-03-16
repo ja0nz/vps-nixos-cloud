@@ -52,7 +52,7 @@ else
     sops -d --extract '["id_ed25519"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \
         > "$KEY_PATH"
 
-    NIX_SSHOPTS="-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $SSH_PORT_LOCAL -i $KEY_PATH"
+    export NIX_SSHOPTS="-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $SSH_PORT_LOCAL -i $KEY_PATH"
     # Find the HM generation path referenced by the service and copy its closure
     HM_GEN_PATH=$(grep -oP '/nix/store/\S+-home-manager-generation' \
         "$TARGET_PATH/etc/systemd/system/home-manager-containers.service" | head -1)
