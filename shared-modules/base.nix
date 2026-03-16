@@ -80,6 +80,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP6hyrcaxriF0JMMbommFpT3MwSUw9GxskGrhyONBtgk"
     ];
   };
+  nix.settings.trusted-users = [ "root" "@wheel" ];
 
   security.sudo.extraRules = [
     {

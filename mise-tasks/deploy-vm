@@ -52,13 +52,17 @@ else
     sops -d --extract '["id_ed25519"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \
         > "$KEY_PATH"
 
+    NIX_SSHOPTS="-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p $SSH_PORT_LOCAL -i $KEY_PATH"
+    # Find the HM generation path referenced by the service and copy its closure
+    HM_GEN_PATH=$(grep -oP '/nix/store/\S+-home-manager-generation' \
+        "$TARGET_PATH/etc/systemd/system/home-manager-containers.service" | head -1)
+    if [ -z "$HM_GEN_PATH" ]; then
+        echo "⚠️  No HM generation found in service file, skipping copy"
+    else
+        echo "📦 Copying HM generation to remote: $HM_GEN_PATH"
+        nix copy --no-substitute --to "ssh://$USER@localhost" "$HM_GEN_PATH"
+    fi
+
     # Run the switch command inside the VM via SSH
-    # We use the -t flag for SSH to ensure sudo has a tty if needed
-    ssh -o IdentitiesOnly=yes \
-        -o UserKnownHostsFile=/dev/null \
-        -o StrictHostKeyChecking=no \
-        -p "$SSH_PORT_LOCAL" \
-        -i "$KEY_PATH" \
-        $USER@localhost \
-        "sudo $TARGET_PATH/bin/switch-to-configuration switch"
+    ssh $NIX_SSHOPTS $USER@localhost "sudo $TARGET_PATH/bin/switch-to-configuration switch"
 fi
