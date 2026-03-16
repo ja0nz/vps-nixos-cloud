@@ -11,6 +11,10 @@
       "/var/log"
       "/var/lib/nixos" # CRITICAL for User/Group ID consistency
       "/var/lib/systemd" # Keeps timers and back-end state
+      {
+        directory = "/var/lib/private";
+        mode = "0700";
+      }
     ]
     ++ config.sysOpts.persist.directories;
     files = [

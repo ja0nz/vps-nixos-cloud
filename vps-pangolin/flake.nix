@@ -85,6 +85,7 @@
           inputs.disko.nixosModules.disko
           inputs.impermanence.nixosModules.impermanence
           ./modules/pangolin.nix
+          ./modules/beszelhub.nix
           ./modules/ddclient.nix
           ./shared-modules/vps-configuration.nix
           ./shared-modules/hardware-configuration.nix
