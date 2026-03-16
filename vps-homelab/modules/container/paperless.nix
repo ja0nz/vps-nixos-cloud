@@ -16,7 +16,6 @@ let
   # Server
   id = "paperless-server";
   idMedia = "paperless-media";
-  idConsume= "paperless-consume";
   containerPort = "8000";
 
   # Database
@@ -98,7 +97,6 @@ in
   };
   virtualisation.quadlet.volumes."${id}" = { };
   virtualisation.quadlet.volumes."${idMedia}" = { };
-  virtualisation.quadlet.volumes."${idConsume}" = { };
   virtualisation.quadlet.containers.${id} = {
     unitConfig = {
       After = [
@@ -117,7 +115,6 @@ in
         "SETUID"
         "SETGID"
         "CHOWN"
-        "DAC_OVERRIDE"
       ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."${id}.env".path ];
@@ -127,9 +124,8 @@ in
         "${internalNet}"
       ];
       volumes = [
-        "${id}:/usr/src/paperless/data"
-        "${idMedia}:/usr/src/paperless/media"
-        "${idConsume}:/usr/src/paperless/consume"
+        "${id}:/usr/src/paperless/data:U"
+        "${idMedia}:/usr/src/paperless/media:U"
       ];
       labels = {
         "traefik.enable" = "true";

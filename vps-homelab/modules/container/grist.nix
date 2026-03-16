@@ -77,7 +77,7 @@ in
         "SETUID"
         "SETGID"
         "CHOWN"
-        "DAC_OVERRIDE"
+        "DAC_OVERRIDE" # grist writes to / so it needs root cap
       ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."${id}.env".path ];
