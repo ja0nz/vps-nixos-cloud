@@ -21,7 +21,7 @@ in
       DATA_DIR=${dataDir}
       KEY=${config.sops.placeholder."beszel_sshKey"}
       TOKEN=${config.sops.placeholder."beszel_token"}
-      HUB_URL=https://mon.${vars.DOMAIN}
+      HUB_URL=https://monitor.${vars.DOMAIN}
     '';
   };
 

@@ -4,6 +4,7 @@
   * Detailed info:
   - Permissions: chown backrest:backrest
   - Persist & Backup: /var/lib/backrest
+  - Proxy: http://localhost:9898
 */
 {
   pkgs,

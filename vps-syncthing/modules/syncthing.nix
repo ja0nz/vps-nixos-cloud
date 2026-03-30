@@ -4,6 +4,7 @@
   * Detailed info:
     https://search.nixos.org/options?query=services.syncthing
     Basic configuration without strictly managing devices/folders
+  - Proxy: http://localhost:8384
 */
 {
   ...
@@ -28,7 +29,7 @@ in
     overrideFolders = false;
     overrideDevices = false;
     settings.gui = {
-      # insecureSkipHostcheck = true;
+      insecureSkipHostcheck = true;
       # Will handle admin access via tunnel
       insecureAdminAccess = true;
     };

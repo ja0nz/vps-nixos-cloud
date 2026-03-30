@@ -5,6 +5,7 @@
   - Persist & Backup: /var/lib/private (done in impermanence anyway)
   - See: shared-modules/beszelhub.nix
   - IMPORTANT: In reverse proxy add rule to bypass: api/beszel/agent-connect
+  - Proxy: http://localhost:8090
 */
 {
   ...
