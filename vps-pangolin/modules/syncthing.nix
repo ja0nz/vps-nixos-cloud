@@ -1,0 +1,1 @@
+../../vps-syncthing/modules/syncthing.nix

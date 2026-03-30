@@ -87,6 +87,7 @@
           ./modules/pangolin.nix
           ./modules/beszelhub.nix
           ./modules/ddclient.nix
+          ./modules/syncthing.nix
           ./shared-modules/vps-configuration.nix
           ./shared-modules/hardware-configuration.nix
           ./shared-modules/impermanence.nix
