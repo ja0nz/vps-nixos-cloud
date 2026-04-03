@@ -48,12 +48,12 @@ in
     autoSubUidGidRange = true;
   };
 
-  # Derive age key from /etc/ssh/ssh_host_ed25519_key
+  # Derive age key from /etc/ssh/mnt/ssh_host_ed25519_key
   system.activationScripts.deriveContainersAgeKey = {
     text = ''
       mkdir -p ${containersAge}
       ${pkgs.ssh-to-age}/bin/ssh-to-age -private-key \
-        -i /etc/ssh/ssh_host_ed25519_key \
+        -i /etc/ssh/mnt/ssh_host_ed25519_key \
         -o ${containersAge}/keys.txt
       chown -R ${toString containersUID} ${containersAge}
       chmod 600 ${containersAge}/keys.txt
