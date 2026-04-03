@@ -3,6 +3,9 @@
   ...
 }:
 
+let
+  hostKey = "/etc/ssh/mnt/ssh_host_ed25519_key";
+in
 {
   system.stateVersion = "24.05";
   time.timeZone = "Europe/Berlin";
@@ -11,7 +14,7 @@
   sops = {
     defaultSopsFormat = "yaml";
     defaultSopsFile = ../secrets/secrets.enc.yaml;
-    age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+    age.sshKeyPaths = [ hostKey ];
   };
 
   # Networking
@@ -21,9 +24,6 @@
     firewall = {
       enable = true;
       trustedInterfaces = [ "podman1" ];
-      allowedTCPPorts = [
-        22
-      ];
     };
   };
 
@@ -35,7 +35,7 @@
     enable = true;
     hostKeys = [
       {
-        path = "/etc/ssh/ssh_host_ed25519_key";
+        path = hostKey;
         type = "ed25519";
       }
     ];

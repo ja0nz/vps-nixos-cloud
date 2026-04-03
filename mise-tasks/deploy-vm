@@ -12,22 +12,16 @@ if ! nc -z localhost "$SSH_PORT_LOCAL" 2>/dev/null; then
     echo "    HTTP(S): via cloudflare tunnel (TODO set routes via CF Dashboard)"
     echo ""
 
-    # Go to the real secret directory
-    cd -P "$MISE_PROJECT_ROOT/secrets"
+    SSH_KEY_DIR="$MISE_PROJECT_ROOT/../.dev-host-key"
+    SSH_HOST_KEY="$SSH_KEY_DIR/ssh_host_ed25519_key"
 
-    # Create temp directory if it doesn't exist
-    mkdir -p "temp"
-
-    # Add placeholder files to git (one-time, safe if already added)
-    touch temp/ssh_host_ed25519_key
-    git add -f temp/ssh_host_ed25519_key 2>/dev/null || true
+    # Create directory if it doesn't exist
+    mkdir -p "$SSH_KEY_DIR"
 
     # Extract Private Key
-    sops -d --extract '["ssh_host_ed25519_key"]' "secrets.enc.yaml" \
-        > "temp/ssh_host_ed25519_key"
-
-    # Mark files as assume-unchanged so they won't be committed with real content
-    git update-index --assume-unchanged temp/ssh_host_ed25519_key
+    sops -d --extract '["ssh_host_ed25519_key"]' "./secrets/secrets.enc.yaml" | \
+        tee "$SSH_HOST_KEY" > /dev/null
+    chmod 600 "$SSH_HOST_KEY"
 
     nix run $MISE_PROJECT_ROOT#dev-local
 else

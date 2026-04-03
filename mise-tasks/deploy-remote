@@ -33,12 +33,12 @@ KEY_PATH="$WS/id_ed25519"
 EXTRA_FILES="$WS/extra"
 
 # --- 3. Secrets: Extract host keys for nixos-anywhere ---
-install -d -m755 "$EXTRA_FILES/persist/etc/ssh"
+install -d -m755 "$EXTRA_FILES/persist/etc/ssh/mnt"
 sops -d --extract '["ssh_host_ed25519_key"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \
-     > "$EXTRA_FILES/persist/etc/ssh/ssh_host_ed25519_key"
+     > "$EXTRA_FILES/persist/etc/ssh/mnt/ssh_host_ed25519_key"
 sops -d --extract '["ssh_host_ed25519_key_pub"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \
-     > "$EXTRA_FILES/persist/etc/ssh/ssh_host_ed25519_key.pub"
-chmod 600 "$EXTRA_FILES/persist/etc/ssh/ssh_host_ed25519_key"
+     > "$EXTRA_FILES/persist/etc/ssh/mnt/ssh_host_ed25519_key.pub"
+chmod 600 "$EXTRA_FILES/persist/etc/ssh/mnt/ssh_host_ed25519_key"
 
 # --- 4. Secrets: Extract deployment key for SSH access ---
 sops -d --extract '["id_ed25519"]' "$MISE_PROJECT_ROOT/secrets/secrets.enc.yaml" \

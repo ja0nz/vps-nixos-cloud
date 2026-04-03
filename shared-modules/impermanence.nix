@@ -19,8 +19,8 @@
     ++ config.sysOpts.persist.directories;
     files = [
       "/etc/machine-id" # CRITICAL for journald and network logs
-      "/etc/ssh/ssh_host_ed25519_key"
-      "/etc/ssh/ssh_host_ed25519_key.pub"
+      "/etc/ssh/mnt/ssh_host_ed25519_key"
+      "/etc/ssh/mnt/ssh_host_ed25519_key.pub"
       "/etc/zfs/zpool.cache"
     ];
     users.${vars.USER} = {

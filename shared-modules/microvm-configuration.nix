@@ -1,8 +1,6 @@
 /**
   Module: microvm-configuration.nix
   Description: Configure a development microvm for rapid testing
-  * Detailed info:
-  - HACK: ssh_host_ed25519_key
 */
 {
   config,
@@ -12,17 +10,11 @@
 }:
 
 {
-  # TODO A bit of a hack
-  # There is also `microvm.credentialFiles` but I could not get it working
-  # For production this does not matter as credentials are mounted before activation
-  # Further reference: https://github.com/microvm-nix/microvm.nix/pull/337#issuecomment-2671084885
-  environment.etc."ssh/ssh_host_ed25519_key" = {
-    source = ../secrets/temp/ssh_host_ed25519_key;
-    mode = "0600";
-  };
-
   # Disable login prompt / SSH only
   systemd.services."serial-getty@ttyS0".enable = false;
+
+  # Mount SSH keys early on
+  fileSystems."/etc/ssh/mnt".neededForBoot = true;
 
   microvm = {
     mem = 4096;
@@ -44,6 +36,12 @@
         source = "/nix/store";
         mountPoint = "/nix/.ro-store";
         readOnly = true;
+      }
+      {
+        proto = "9p";
+        tag = "dev-host-key";
+        source = ".dev-host-key";
+        mountPoint = "/etc/ssh/mnt";
       }
     ];
 
