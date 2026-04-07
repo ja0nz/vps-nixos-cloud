@@ -14,30 +14,35 @@ let
   url = "${subDomain}.${vars.DOMAIN}";
 
   # Server
-  id = "paperless-server";
-  idMedia = "paperless-media";
-  containerPort = "8000";
+  server = {
+    id = "paperless-server";
+    idMedia = "paperless-media";
+    containerPort = "8000";
+  };
 
   # Database
-  idDB = "paperless-database";
-  versionDBTag = "18";
+  db = {
+    id = "paperless-database";
+    versionTag = "18";
+  };
 
   # Redis
-  idRedis = "paperless-redis";
-
+  redis = {
+    id = "paperless-redis";
+  };
 in
 {
   sops.secrets."paperless_db_password" = { };
   sops.secrets."paperless_secret_key" = { };
-  sops.templates."${id}.env" = {
+  sops.templates."${server.id}.env" = {
     content = ''
       # https://docs.paperless-ngx.com/configuration/
 
       PAPERLESS_URL=https://${url}
       PAPERLESS_APP_TITLE=Docs
 
-      PAPERLESS_REDIS=redis://${idRedis}
-      PAPERLESS_DBHOST=${idDB}
+      PAPERLESS_REDIS=redis://${redis.id}
+      PAPERLESS_DBHOST=${db.id}
       PAPERLESS_DBPASS=${config.sops.placeholder."paperless_db_password"}
       PAPERLESS_SECRET_KEY=${config.sops.placeholder."paperless_secret_key"}
 
@@ -50,7 +55,7 @@ in
     '';
   };
 
-  sops.templates."${idDB}.env" = {
+  sops.templates."${db.id}.env" = {
     content = ''
       POSTGRES_DB=paperless
       POSTGRES_USER=paperless
@@ -62,8 +67,8 @@ in
 
   # Define pangolin public-resources
   # Options: ../containers.nix
-  hmOpts.pangolin.blueprints."${id}" = {
-    name = id;
+  hmOpts.pangolin.blueprints."${server.id}" = {
+    name = server.id;
     full-domain = url;
     protocol = "http";
     auth = {
@@ -95,17 +100,17 @@ in
       internal = true;
     };
   };
-  virtualisation.quadlet.volumes."${id}" = { };
-  virtualisation.quadlet.volumes."${idMedia}" = { };
-  virtualisation.quadlet.containers.${id} = {
+  virtualisation.quadlet.volumes."${server.id}" = { };
+  virtualisation.quadlet.volumes."${server.idMedia}" = { };
+  virtualisation.quadlet.containers.${server.id} = {
     unitConfig = {
       After = [
-        "${idRedis}.service"
-        "${idDB}.service"
+        "${redis.id}.service"
+        "${db.id}.service"
       ];
       Requires = [
-        "${idRedis}.service"
-        "${idDB}.service"
+        "${redis}.service"
+        "${db.id}.service"
       ];
     };
     containerConfig = {
@@ -117,25 +122,25 @@ in
         "CHOWN"
       ];
       noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${id}.env".path ];
+      environmentFiles = [ config.sops.templates."${server.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
       networks = [
         "${publicNet}"
         "${internalNet}"
       ];
       volumes = [
-        "${id}:/usr/src/paperless/data:U"
-        "${idMedia}:/usr/src/paperless/media:U"
+        "${server.id}:/usr/src/paperless/data:U"
+        "${server.idMedia}:/usr/src/paperless/media:U"
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+        "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
+        "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
       };
     };
   };
 
-  virtualisation.quadlet.containers.${idRedis} = {
+  virtualisation.quadlet.containers.${redis.id} = {
     containerConfig = {
       image = "docker.io/valkey/valkey:9";
       environments.TZ = osConfig.time.timeZone;
@@ -149,16 +154,16 @@ in
     };
   };
 
-  virtualisation.quadlet.volumes."${idDB}" = { };
-  virtualisation.quadlet.containers.${idDB} = {
+  virtualisation.quadlet.volumes."${db.id}" = { };
+  virtualisation.quadlet.containers.${db.id} = {
     containerConfig = {
-      image = "docker.io/postgres:${versionDBTag}";
+      image = "docker.io/postgres:${db.versionTag}";
       shmSize = "128mb";
-      environmentFiles = [ config.sops.templates."${idDB}.env".path ];
+      environmentFiles = [ config.sops.templates."${db.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${internalNet}" ];
       volumes = [
-        "${idDB}:/var/lib/postgresql"
+        "${db.id}:/var/lib/postgresql"
       ];
     };
   };
@@ -169,20 +174,20 @@ in
       text = ''
         set -euo pipefail
 
-        DB_USER=$(podman exec ${idDB} printenv POSTGRES_USER)
+        DB_USER=$(podman exec ${db.id} printenv POSTGRES_USER)
         DUMP_FILE="$HOME/paperless-db-dump.sql.gz"
 
         echo "==> Backing up PostgreSQL..."
-        podman exec ${idDB} \
+        podman exec ${db.id} \
           pg_dumpall --clean --if-exists --username="$DB_USER" \
           | gzip > "$DUMP_FILE"
         echo "    Backup written to $DUMP_FILE"
 
         echo "==> Stopping paperless services..."
-        systemctl --user stop ${id} ${idDB}
+        systemctl --user stop ${server.id} ${db.id}
 
         echo "==> Wiping data volume..."
-        podman volume rm ${idDB}
+        podman volume rm ${db.id}
 
         echo ""
         echo "*** Now switch your Nix config with the new version                        ***"
@@ -203,20 +208,20 @@ in
         fi
 
         echo "==> Starting new database container..."
-        systemctl --user start ${idDB}
+        systemctl --user start ${db.id}
 
         echo "==> Waiting for database to be ready..."
-        until podman exec ${idDB} pg_isready 2>/dev/null; do
+        until podman exec ${db.id} pg_isready 2>/dev/null; do
           sleep 2
         done
 
         echo "==> Restoring backup..."
-        DB_USER=$(podman exec ${idDB} printenv POSTGRES_USER)
+        DB_USER=$(podman exec ${db.id} printenv POSTGRES_USER)
         gunzip < "$DUMP_FILE" \
-          | podman exec -i ${idDB} psql --username="$DB_USER"
+          | podman exec -i ${db.id} psql --username="$DB_USER"
 
         echo "==> Starting all paperless services..."
-        systemctl --user start ${id}
+        systemctl --user start ${server.id}
 
         echo "==> Cleaning up dump file..."
         rm "$DUMP_FILE"
