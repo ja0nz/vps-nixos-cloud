@@ -1,6 +1,5 @@
 {
   vars,
-  pkgs,
   config,
   osConfig,
   ...
@@ -15,28 +14,36 @@ let
   url = "${subDomain}.${vars.DOMAIN}";
 
   # Server
-  id = "immich-server";
-  containerPort = "2283";
+  server = {
+    id = "immich-server";
+    containerPort = "2283";
+  };
 
   # Machine Learning
-  idML = "immich-machine-learning";
+  ml = {
+    id = "immich-machine-learning";
+  };
 
   # Database
-  idDB = "immich-database";
-  versionDBTag = "18-vectorchord0.5.3";
+  db = {
+    id = "immich-database";
+    versionTag = "18-vectorchord0.5.3";
+  };
 
   # Redis
-  idRedis = "immich-redis";
+  redis = {
+    id = "immich-redis";
+  };
 
 in
 {
   sops.secrets."immich_db_password" = { };
-  sops.templates."${id}.env" = {
+  sops.templates."${server.id}.env" = {
     content = ''
       # https://docs.immich.app/install/environment-variables/
-      IMMICH_MACHINE_LEARNING_URL=http://${idML}:3003
-      REDIS_HOSTNAME=${idRedis}
-      DB_HOSTNAME=${idDB}
+      IMMICH_MACHINE_LEARNING_URL=http://${ml.id}:3003
+      REDIS_HOSTNAME=${redis.id}
+      DB_HOSTNAME=${db.id}
       DB_USERNAME=immich
       DB_DATABASE_NAME=immich
 
@@ -44,7 +51,7 @@ in
     '';
   };
 
-  sops.templates."${idDB}.env" = {
+  sops.templates."${db.id}.env" = {
     content = ''
       POSTGRES_DB=immich
       POSTGRES_USER=immich
@@ -56,8 +63,8 @@ in
 
   # Define pangolin public-resources
   # Options: ../containers.nix
-  hmOpts.pangolin.blueprints."${id}" = {
-    name = id;
+  hmOpts.pangolin.blueprints."${server.id}" = {
+    name = server.id;
     full-domain = url;
     protocol = "http";
     auth = {
@@ -89,16 +96,16 @@ in
       internal = true;
     };
   };
-  virtualisation.quadlet.volumes."${id}" = { };
-  virtualisation.quadlet.containers.${id} = {
+  virtualisation.quadlet.volumes."${server.id}" = { };
+  virtualisation.quadlet.containers.${server.id} = {
     unitConfig = {
       After = [
-        "${idRedis}.service"
-        "${idDB}.service"
+        "${redis.id}.service"
+        "${db.id}.service"
       ];
       Requires = [
-        "${idRedis}.service"
-        "${idDB}.service"
+        "${redis.id}.service"
+        "${db.id}.service"
       ];
     };
     containerConfig = {
@@ -106,25 +113,25 @@ in
       dropCapabilities = [ "ALL" ];
       addCapabilities = [ ];
       noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${id}.env".path ];
+      environmentFiles = [ config.sops.templates."${server.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
       networks = [
         "${publicNet}"
         "${internalNet}"
       ];
       volumes = [
-        "${id}:/data"
+        "${server.id}:/data"
       ];
       labels = {
         "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+        "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
+        "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
       };
     };
   };
 
-  virtualisation.quadlet.volumes."${idML}" = { };
-  virtualisation.quadlet.containers.${idML} = {
+  virtualisation.quadlet.volumes."${ml.id}" = { };
+  virtualisation.quadlet.containers.${ml.id} = {
     containerConfig = {
       image = "ghcr.io/immich-app/immich-machine-learning:${versionTag}";
       dropCapabilities = [ "ALL" ];
@@ -133,12 +140,12 @@ in
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${internalNet}" ];
       volumes = [
-        "${idML}:/cache"
+        "${ml.id}:/cache"
       ];
     };
   };
 
-  virtualisation.quadlet.containers.${idRedis} = {
+  virtualisation.quadlet.containers.${redis.id} = {
     containerConfig = {
       image = "docker.io/valkey/valkey:9";
       environments.TZ = osConfig.time.timeZone;
@@ -152,118 +159,17 @@ in
     };
   };
 
-  virtualisation.quadlet.volumes."${idDB}" = { };
-  virtualisation.quadlet.containers.${idDB} = {
+  virtualisation.quadlet.volumes."${db.id}" = { };
+  virtualisation.quadlet.containers.${db.id} = {
     containerConfig = {
-      image = "ghcr.io/immich-app/postgres:${versionDBTag}";
+      image = "ghcr.io/immich-app/postgres:${db.versionTag}";
       shmSize = "128mb";
-      environmentFiles = [ config.sops.templates."${idDB}.env".path ];
+      environmentFiles = [ config.sops.templates."${db.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${internalNet}" ];
       volumes = [
-        "${idDB}:/var/lib/postgresql"
+        "${db.id}:/var/lib/postgresql"
       ];
     };
   };
-  home.packages = [
-    (pkgs.writeShellApplication {
-      name = "immich-db-backup";
-      runtimeInputs = [ pkgs.gzip ];
-      text = ''
-        set -euo pipefail
-
-        DB_USER=$(podman exec ${idDB} printenv POSTGRES_USER)
-        DUMP_FILE="$HOME/immich-db-dump.sql.gz"
-
-        echo "==> Backing up PostgreSQL..."
-        podman exec ${idDB} \
-          pg_dumpall --clean --if-exists --username="$DB_USER" \
-          | gzip > "$DUMP_FILE"
-        echo "    Backup written to $DUMP_FILE"
-
-        echo "==> Stopping immich services..."
-        systemctl --user stop ${id} ${idML} ${idDB}
-
-        echo "==> Wiping data volume..."
-        podman volume rm ${idDB}
-
-        echo ""
-        echo "*** Now switch your Nix config with the new version                        ***"
-        echo "*** Then run: immich-db-restore                                            ***"
-        echo ""
-      '';
-    })
-    (pkgs.writeShellApplication {
-      name = "immich-db-restore";
-      runtimeInputs = [ pkgs.gzip ];
-      text = ''
-        set -euo pipefail
-
-        DUMP_FILE="$HOME/immich-db-dump.sql.gz"
-        if [[ ! -f "$DUMP_FILE" ]]; then
-          echo "No dump file found at $DUMP_FILE"
-          exit 1
-        fi
-
-        echo "==> Starting new database container..."
-        systemctl --user start ${idDB}
-
-        echo "==> Waiting for database to be ready..."
-        until podman exec ${idDB} pg_isready 2>/dev/null; do
-          sleep 2
-        done
-
-        echo "==> Restoring backup..."
-        DB_USER=$(podman exec ${idDB} printenv POSTGRES_USER)
-        gunzip < "$DUMP_FILE" \
-          | podman exec -i ${idDB} psql --username="$DB_USER"
-
-        echo "==> Starting all immich services..."
-        systemctl --user start ${id} ${idML}
-
-        echo "==> Cleaning up dump file..."
-        rm "$DUMP_FILE"
-
-        echo "Done."
-      '';
-    })
-    (pkgs.writeShellApplication {
-      name = "immich-db-list-versions";
-      runtimeInputs = [
-        pkgs.curl
-        pkgs.jq
-      ];
-      text = ''
-        set -euo pipefail
-
-        CURRENT_TAG="${versionDBTag}"
-        PREFIX="''${CURRENT_TAG%%-*}"
-        MAJOR="''${PREFIX%%.*}"
-        NEXT_MAJOR=$(( MAJOR + 1 ))
-
-        echo "Current tag in use: $CURRENT_TAG"
-        echo ""
-
-        PAGE=$(curl -sSf \
-              "https://github.com/immich-app/base-images/pkgs/container/postgres/versions?filters%5Bversion_type%5D=tagged")
-
-        echo "==> Available tags matching current major version ($PREFIX):"
-        echo "$PAGE" \
-          | grep -oP "$PREFIX-vectorchord[0-9]+\.[0-9]+\.[0-9]+" \
-          | sort -V
-
-        echo ""
-        echo "==> Major version update check (looking for prefix \"$NEXT_MAJOR\"):"
-        NEXT=$(echo "$PAGE" \
-          | grep -oP "$NEXT_MAJOR-vectorchord[0-9]+\.[0-9]+\.[0-9]+" \
-          | sort -V)
-
-        if [[ -n "$NEXT" ]]; then
-          echo "$NEXT"
-        else
-          echo "No major update available yet"
-        fi
-      '';
-    })
-  ];
 }
