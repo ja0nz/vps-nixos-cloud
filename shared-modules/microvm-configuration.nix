@@ -21,7 +21,7 @@
     vcpu = 4;
     hypervisor = "qemu";
     socket = "control.socket";
-    vsock.cid = vars.SSH_PORT_LOCAL; # Has to be unique anyway
+    vsock.cid = vars.DEV_SSH_PORT; # Has to be unique anyway
     volumes = [
       {
         mountPoint = "/var/tmp";
@@ -40,7 +40,7 @@
       {
         proto = "9p";
         tag = "dev-host-key";
-        source = ".dev-host-key";
+        source = "../.dev-host-key";
         mountPoint = "/etc/ssh/mnt";
       }
     ];
@@ -55,7 +55,7 @@
     forwardPorts = [
       {
         from = "host";
-        host.port = vars.SSH_PORT_LOCAL;
+        host.port = vars.DEV_SSH_PORT;
         guest.port = 22;
       }
     ];

@@ -156,7 +156,6 @@ in
     };
   };
 
-
   virtualisation.quadlet.volumes."${postgis.id}" = { };
   virtualisation.quadlet.containers.${postgis.id} = {
     containerConfig = {

@@ -23,7 +23,7 @@
       "/etc/ssh/mnt/ssh_host_ed25519_key.pub"
       "/etc/zfs/zpool.cache"
     ];
-    users.${vars.USER} = {
+    users.${vars.VIRT_USER} = {
       files = [
         ".bash_history" # Keep command history for convenience
       ];

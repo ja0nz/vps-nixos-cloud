@@ -2,7 +2,9 @@
   description = "Homelab";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.follows = "tooling/nixpkgs";
+    tooling.url = "path:..";
+
     impermanence.url = "github:nix-community/impermanence";
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
@@ -25,10 +27,13 @@
     inputs@{
       self,
       nixpkgs,
+      tooling,
       ...
     }:
     let
       system = "x86_64-linux";
+      pkgs = nixpkgs.legacyPackages.${system};
+
       specialArgs = {
         inherit inputs;
         vars = builtins.fromJSON (builtins.readFile ./env.json);
@@ -61,6 +66,18 @@
         default = self.packages.${system}.dev-local;
         dev-local = self.nixosConfigurations.dev-local.config.microvm.declaredRunner;
       };
+
+      formatter.x86_64-linux = pkgs.nixfmt-tree;
+      devShells.${system}.default = pkgs.mkShell (
+        {
+          inputsFrom = [ tooling.devShells.${system}.default ];
+          shellHook = ''
+            export FLAKE_ROOT="$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)"
+            export SECRETS="$FLAKE_ROOT/secrets/secrets.enc.yaml"
+          '';
+        }
+        // builtins.fromJSON (builtins.readFile ./env.json)
+      );
 
       nixosConfigurations.dev-local = mkConfig {
         extraModules = [

@@ -69,7 +69,7 @@ in
   };
 
   # User for ssh login
-  users.users.${vars.USER} = {
+  users.users.${vars.VIRT_USER} = {
     isNormalUser = true;
     uid = 1000;
     description = "User for ssh login";
@@ -87,7 +87,7 @@ in
 
   security.sudo.extraRules = [
     {
-      users = [ "${vars.USER}" ];
+      users = [ "${vars.VIRT_USER}" ];
       commands = [
         {
           command = "ALL";

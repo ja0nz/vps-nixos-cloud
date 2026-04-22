@@ -132,8 +132,12 @@
         "geolite2-db": "geolite2-db",
         "impermanence": "impermanence",
         "microvm": "microvm",
-        "nixpkgs": "nixpkgs_2",
-        "sops-nix": "sops-nix"
+        "nixpkgs": [
+          "tooling",
+          "nixpkgs"
+        ],
+        "sops-nix": "sops-nix",
+        "tooling": "tooling"
       }
     },
     "sops-nix": {
@@ -171,6 +175,20 @@
         "type": "git",
         "url": "https://spectrum-os.org/git/spectrum"
       }
+    },
+    "tooling": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "path": "..",
+        "type": "path"
+      },
+      "original": {
+        "path": "..",
+        "type": "path"
+      },
+      "parent": []
     }
   },
   "root": "root",

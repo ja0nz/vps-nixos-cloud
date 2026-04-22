@@ -154,9 +154,13 @@
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "microvm": "microvm",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": [
+          "tooling",
+          "nixpkgs"
+        ],
         "quadlet-nix": "quadlet-nix",
-        "sops-nix": "sops-nix"
+        "sops-nix": "sops-nix",
+        "tooling": "tooling"
       }
     },
     "sops-nix": {
@@ -194,6 +198,20 @@
         "type": "git",
         "url": "https://spectrum-os.org/git/spectrum"
       }
+    },
+    "tooling": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
+      },
+      "locked": {
+        "path": "..",
+        "type": "path"
+      },
+      "original": {
+        "path": "..",
+        "type": "path"
+      },
+      "parent": []
     }
   },
   "root": "root",
