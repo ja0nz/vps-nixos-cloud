@@ -46,7 +46,7 @@ in
         "SETUID"
         "SETGID"
         "CHOWN"
-        "CAP_NET_BIND_SERVICE"
+        "NET_BIND_SERVICE"
       ];
       noNewPrivileges = true;
       environments.TZ = osConfig.time.timeZone;
