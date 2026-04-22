@@ -8,6 +8,11 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       scripts = import ./scripts { inherit pkgs; };
+      helpText = builtins.concatStringsSep "\\n" (
+        map (name: "  \\033[1;36m${name}\\033[0m — ${scripts.${name}.meta.description}") (
+          builtins.attrNames scripts
+        )
+      );
     in
     {
       devShells.${system}.default = pkgs.mkShell {
@@ -26,6 +31,18 @@
             pangolin-cli
           ]
           ++ (builtins.attrValues scripts);
+        shellHook = ''
+          echo -e "\033[1;33m╭─── 🛠  available commands ───────────────────╮\033[0m"
+          echo -e "${helpText}"
+          echo -e "\033[1;33m╰──────────────────────────────────────────────╯\033[0m"
+          echo ""
+          echo -e "\033[1;33m╭─── 🌍 environment variables ─────────────────╮\033[0m"
+          echo -e "  \033[1;35mDOMAIN\033[0m       — $DOMAIN"
+          echo -e "  \033[1;35mDEV_SSH_PORT\033[0m — $DEV_SSH_PORT"
+          echo -e "  \033[1;35mREMOTE_IP4\033[0m   — ''${REMOTE_IP4:-not set}"
+          echo -e "  \033[1;35mCF_TUNNEL\033[0m    — $CF_TUNNEL"
+          echo -e "\033[1;33m╰──────────────────────────────────────────────╯\033[0m"
+        '';
       };
     };
 }

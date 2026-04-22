@@ -6,13 +6,16 @@ let
   cloudflaredExe = pkgs.lib.getExe pkgs.cloudflared;
   ncExe = pkgs.lib.getExe' pkgs.netcat-openbsd "nc";
   bash = pkgs.bash;
-  script =
-    name: text:
-    pkgs.writeShellScriptBin name ''
-      #!${bash}/bin/bash
-      set -euo pipefail
-      ${text}
-    '';
+  mkScript =
+    name: description: text:
+    let
+      pkg = pkgs.writeShellScriptBin name ''
+        #!${bash}/bin/bash
+        set -euo pipefail
+        ${text}
+      '';
+    in
+    pkg // { meta.description = description; };
 
   extractKey = ''
     KEY_PATH=$(mktemp)
@@ -22,10 +25,14 @@ let
   '';
 in
 {
-  deploy-vm = script "deploy-vm" (builtins.readFile ./deploy-vm.sh);
-  deploy-remote = script "deploy-remote" (builtins.readFile ./deploy-remote.sh);
+  deploy-vm = mkScript "deploy-vm" "Deploy/Update a local development VM" (
+    builtins.readFile ./deploy-vm.sh
+  );
+  deploy-remote = mkScript "deploy-remote" "Deploy/Update to production VPS → prompt or $REMOTE_IP4" (
+    builtins.readFile ./deploy-remote.sh
+  );
 
-  ssh-local = script "ssh-local" ''
+  ssh-local = mkScript "ssh-local" "SSH into local VM on port $DEV_SSH_PORT" ''
     : "''${DEV_SSH_PORT:?Need to set DEV_SSH_PORT}"
     : "''${SECRETS:?Need to set SECRETS}"
     : "''${VIRT_USER:?Need to set VIRT_USER}"
@@ -44,7 +51,7 @@ in
       "$VIRT_USER@localhost"
   '';
 
-  ssh-remote = script "ssh-remote" ''
+  ssh-remote = mkScript "ssh-remote" "SSH into remote VPS → prompt or $REMOTE_IP4" ''
     : "''${SECRETS:?Need to set SECRETS}"
     : "''${VIRT_USER:?Need to set VIRT_USER}"
 
@@ -72,7 +79,7 @@ in
       "$VIRT_USER@$REMOTE_IP4"
   '';
 
-  cf-add-dns = script "cf-add-dns" ''
+  cf-add-dns = mkScript "cf-add-dns" "Add a Cloudflare DNS record → $CF_TUNNEL" ''
     : "''${CF_TUNNEL:?Need to set CF_TUNNEL}"
     : "''${DOMAIN:?Need to set DOMAIN}"
 
