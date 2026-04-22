@@ -58,6 +58,35 @@ in
     '';
   };
 
+  # Define pangolin public-resources
+  # Options: ../containers.nix
+  hmOpts.pangolin.blueprints."${server.id}" = {
+    name = server.id;
+    full-domain = url;
+    protocol = "http";
+    auth = {
+      sso-enabled = true;
+    };
+    targets = [
+      {
+        hostname = "localhost";
+        method = "http";
+        port = 80;
+        # healthcheck = {
+        #   hostname = "localhost";
+        #   port = 80;
+        #   path = "/api/server/ping";
+        #   headers = [
+        #     {
+        #       name = "Host";
+        #       value = url;
+        #     }
+        #   ];
+        # };
+      }
+    ];
+  };
+
   virtualisation.quadlet.networks."${publicNet}" = { };
   virtualisation.quadlet.networks."${internalNet}" = {
     networkConfig = {
@@ -81,7 +110,11 @@ in
     containerConfig = {
       image = "ghcr.io/dedicatedcode/reitti:${versionTag}";
       dropCapabilities = [ "ALL" ];
-      addCapabilities = [ ];
+      addCapabilities = [
+        "CHOWN"
+        "SETGID"
+        "SETUID"
+      ];
       noNewPrivileges = true;
       environmentFiles = [ config.sops.templates."${server.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
@@ -90,7 +123,7 @@ in
         "${internalNet}"
       ];
       volumes = [
-        "${server.id}:/data"
+        "${server.id}:/data/"
       ];
       labels = {
         "traefik.enable" = "true";
@@ -100,10 +133,34 @@ in
     };
   };
 
+  virtualisation.quadlet.volumes."${tileCache.id}" = { };
+  virtualisation.quadlet.containers.${tileCache.id} = {
+    containerConfig = {
+      image = "ghcr.io/dedicatedcode/reitti-tile-cache:${versionTag}";
+      dropCapabilities = [ "ALL" ];
+      addCapabilities = [
+        "CHOWN"
+        "SETUID"
+        "SETGID"
+        "NET_BIND_SERVICE"
+      ];
+      noNewPrivileges = true;
+      environments.TZ = osConfig.time.timeZone;
+      networks = [
+        "${publicNet}"
+        "${internalNet}"
+      ];
+      volumes = [
+        "${tileCache.id}:/var/cache/nginx"
+      ];
+    };
+  };
+
+
   virtualisation.quadlet.volumes."${postgis.id}" = { };
   virtualisation.quadlet.containers.${postgis.id} = {
     containerConfig = {
-      image = "ghcr.io/dedicatedcode/reitti-tile-cache:${versionTag}";
+      image = "docker.io/postgis/postgis:${postgis.versionTag}";
       shmSize = "128mb";
       environmentFiles = [ config.sops.templates."${postgis.id}.env".path ];
       environments.TZ = osConfig.time.timeZone;
@@ -114,25 +171,12 @@ in
     };
   };
 
-  virtualisation.quadlet.volumes."${tileCache.id}" = { };
-  virtualisation.quadlet.containers.${tileCache.id} = {
-    containerConfig = {
-      image = "docker.io/postgis/postgis:${postgis.versionTag}";
-      environmentFiles = [ config.sops.templates."${postgis.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      volumes = [
-        "${tileCache.id}:/var/cache/nginx"
-      ];
-    };
-  };
-
   virtualisation.quadlet.containers.${redis.id} = {
     containerConfig = {
-      image = "docker.io/valkey/valkey:9";
+      image = "docker.io/redis:7-alpine";
       environments.TZ = osConfig.time.timeZone;
       networks = [ "${internalNet}" ];
-      healthCmd = "valkey-cli ping | grep -q PONG";
+      healthCmd = "redis-cli ping | grep -q PONG";
       healthRetries = 2;
       healthInterval = "30s";
       healthTimeout = "10s";
