@@ -32,37 +32,43 @@ let
   };
 in
 {
-  sops.secrets."paperless_db_password" = { };
-  sops.secrets."paperless_secret_key" = { };
-  sops.templates."${server.id}.env" = {
-    content = ''
-      # https://docs.paperless-ngx.com/configuration/
+  sops = {
+    secrets = {
+      "paperless_db_password" = { };
+      "paperless_secret_key" = { };
+    };
+    templates = {
+      "${server.id}.env" = {
+        content = ''
+          # https://docs.paperless-ngx.com/configuration/
 
-      PAPERLESS_URL=https://${url}
-      PAPERLESS_APP_TITLE=Docs
+          PAPERLESS_URL=https://${url}
+          PAPERLESS_APP_TITLE=Docs
 
-      PAPERLESS_REDIS=redis://${redis.id}
-      PAPERLESS_DBHOST=${db.id}
-      PAPERLESS_DBPASS=${config.sops.placeholder."paperless_db_password"}
-      PAPERLESS_SECRET_KEY=${config.sops.placeholder."paperless_secret_key"}
+          PAPERLESS_REDIS=redis://${redis.id}
+          PAPERLESS_DBHOST=${db.id}
+          PAPERLESS_DBPASS=${config.sops.placeholder."paperless_db_password"}
+          PAPERLESS_SECRET_KEY=${config.sops.placeholder."paperless_secret_key"}
 
-      PAPERLESS_FILENAME_FORMAT={{ created_year }}/{{ correspondent }}/{{ title }}
-      PAPERLESS_FILENAME_FORMAT_REMOVE_NONE=true
-      PAPERLESS_OCR_LANGUAGE=deu
+          PAPERLESS_FILENAME_FORMAT={{ created_year }}/{{ correspondent }}/{{ title }}
+          PAPERLESS_FILENAME_FORMAT_REMOVE_NONE=true
+          PAPERLESS_OCR_LANGUAGE=deu
 
-      # PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
-      # PAPERLESS_SOCIALACCOUNT_PROVIDERS={"openid_connect":{"SCOPE":["openid","profile","email"],"OAUTH_PKCE_ENABLED":true,"APPS":[{"provider_id":"pocket-id","name":"Pocket-ID","client_id":"Place the Client ID","secret":"Place the Client Secret","settings":{"server_url":"https://pocketid.example.com"}}]}}
-    '';
-  };
+          # PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
+          # PAPERLESS_SOCIALACCOUNT_PROVIDERS={"openid_connect":{"SCOPE":["openid","profile","email"],"OAUTH_PKCE_ENABLED":true,"APPS":[{"provider_id":"pocket-id","name":"Pocket-ID","client_id":"Place the Client ID","secret":"Place the Client Secret","settings":{"server_url":"https://pocketid.example.com"}}]}}
+        '';
+      };
 
-  sops.templates."${db.id}.env" = {
-    content = ''
-      POSTGRES_DB=paperless
-      POSTGRES_USER=paperless
-      POSTGRES_INITDB_ARGS='--data-checksums'
+      "${db.id}.env" = {
+        content = ''
+          POSTGRES_DB=paperless
+          POSTGRES_USER=paperless
+          POSTGRES_INITDB_ARGS='--data-checksums'
 
-      POSTGRES_PASSWORD=${config.sops.placeholder."paperless_db_password"}
-    '';
+          POSTGRES_PASSWORD=${config.sops.placeholder."paperless_db_password"}
+        '';
+      };
+    };
   };
 
   # Define pangolin public-resources
@@ -94,77 +100,85 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.networks."${internalNet}" = {
-    networkConfig = {
-      internal = true;
-    };
-  };
-  virtualisation.quadlet.volumes."${server.id}" = { };
-  virtualisation.quadlet.volumes."${server.idMedia}" = { };
-  virtualisation.quadlet.containers.${server.id} = {
-    unitConfig = {
-      After = [
-        "${redis.id}.service"
-        "${db.id}.service"
-      ];
-      Requires = [
-        "${redis}.service"
-        "${db.id}.service"
-      ];
-    };
-    containerConfig = {
-      image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [
-        "SETUID"
-        "SETGID"
-        "CHOWN"
-      ];
-      noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${server.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-        "${internalNet}"
-      ];
-      volumes = [
-        "${server.id}:/usr/src/paperless/data:U"
-        "${server.idMedia}:/usr/src/paperless/media:U"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+  virtualisation.quadlet = {
+    networks = {
+      "${publicNet}" = { };
+      "${internalNet}" = {
+        networkConfig = {
+          internal = true;
+        };
       };
     };
-  };
-
-  virtualisation.quadlet.containers.${redis.id} = {
-    containerConfig = {
-      image = "docker.io/valkey/valkey:9";
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      healthCmd = "valkey-cli ping | grep -q PONG";
-      healthRetries = 2;
-      healthInterval = "30s";
-      healthTimeout = "10s";
-      healthStartPeriod = "120s";
-      healthStartupInterval = "5s";
+    volumes = {
+      "${server.id}" = { };
+      "${server.idMedia}" = { };
+      "${db.id}" = { };
     };
-  };
+    containers = {
+      ${server.id} = {
+        unitConfig = {
+          After = [
+            "${redis.id}.service"
+            "${db.id}.service"
+          ];
+          Requires = [
+            "${redis}.service"
+            "${db.id}.service"
+          ];
+        };
+        containerConfig = {
+          image = "ghcr.io/paperless-ngx/paperless-ngx:latest";
+          dropCapabilities = [ "ALL" ];
+          addCapabilities = [
+            "SETUID"
+            "SETGID"
+            "CHOWN"
+          ];
+          noNewPrivileges = true;
+          environmentFiles = [ config.sops.templates."${server.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [
+            "${publicNet}"
+            "${internalNet}"
+          ];
+          volumes = [
+            "${server.id}:/usr/src/paperless/data:U"
+            "${server.idMedia}:/usr/src/paperless/media:U"
+          ];
+          labels = {
+            "traefik.enable" = "true";
+            "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
+            "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+          };
+        };
+      };
 
-  virtualisation.quadlet.volumes."${db.id}" = { };
-  virtualisation.quadlet.containers.${db.id} = {
-    containerConfig = {
-      image = "docker.io/postgres:${db.versionTag}";
-      shmSize = "128mb";
-      environmentFiles = [ config.sops.templates."${db.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      volumes = [
-        "${db.id}:/var/lib/postgresql"
-      ];
+      ${redis.id} = {
+        containerConfig = {
+          image = "docker.io/valkey/valkey:9";
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          healthCmd = "valkey-cli ping | grep -q PONG";
+          healthRetries = 2;
+          healthInterval = "30s";
+          healthTimeout = "10s";
+          healthStartPeriod = "120s";
+          healthStartupInterval = "5s";
+        };
+      };
+
+      ${db.id} = {
+        containerConfig = {
+          image = "docker.io/postgres:${db.versionTag}";
+          shmSize = "128mb";
+          environmentFiles = [ config.sops.templates."${db.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          volumes = [
+            "${db.id}:/var/lib/postgresql"
+          ];
+        };
+      };
     };
   };
   home.packages = [

@@ -1,17 +1,1 @@
-repos:
--   repo: local
-    hooks:
-    -   id: nix-fmt
-        name: nix-fmt
-        description: Formatting nix files
-        entry: nix fmt
-        language: system
-        pass_filenames: false # nix fmt handles finding files
-
-    -   id: deadnix
-        name: deadnix
-        description: Scan Nix files for dead code
-        entry: deadnix
-        args: [--fail]
-        types: [nix]
-        language: system
+/nix/store/737bylq24hmyfkp87xwhg7sksdm73rk4-pre-commit-config.json

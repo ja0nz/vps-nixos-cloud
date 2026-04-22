@@ -37,28 +37,32 @@ let
 
 in
 {
-  sops.secrets."immich_db_password" = { };
-  sops.templates."${server.id}.env" = {
-    content = ''
-      # https://docs.immich.app/install/environment-variables/
-      IMMICH_MACHINE_LEARNING_URL=http://${ml.id}:3003
-      REDIS_HOSTNAME=${redis.id}
-      DB_HOSTNAME=${db.id}
-      DB_USERNAME=immich
-      DB_DATABASE_NAME=immich
+  sops = {
+    secrets."immich_db_password" = { };
+    templates = {
+      "${server.id}.env" = {
+        content = ''
+          # https://docs.immich.app/install/environment-variables/
+          IMMICH_MACHINE_LEARNING_URL=http://${ml.id}:3003
+          REDIS_HOSTNAME=${redis.id}
+          DB_HOSTNAME=${db.id}
+          DB_USERNAME=immich
+          DB_DATABASE_NAME=immich
 
-      DB_PASSWORD=${config.sops.placeholder."immich_db_password"}
-    '';
-  };
+          DB_PASSWORD=${config.sops.placeholder."immich_db_password"}
+        '';
+      };
 
-  sops.templates."${db.id}.env" = {
-    content = ''
-      POSTGRES_DB=immich
-      POSTGRES_USER=immich
-      POSTGRES_INITDB_ARGS='--data-checksums'
+      "${db.id}.env" = {
+        content = ''
+          POSTGRES_DB=immich
+          POSTGRES_USER=immich
+          POSTGRES_INITDB_ARGS='--data-checksums'
 
-      POSTGRES_PASSWORD=${config.sops.placeholder."immich_db_password"}
-    '';
+          POSTGRES_PASSWORD=${config.sops.placeholder."immich_db_password"}
+        '';
+      };
+    };
   };
 
   # Define pangolin public-resources
@@ -90,86 +94,94 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.networks."${internalNet}" = {
-    networkConfig = {
-      internal = true;
-    };
-  };
-  virtualisation.quadlet.volumes."${server.id}" = { };
-  virtualisation.quadlet.containers.${server.id} = {
-    unitConfig = {
-      After = [
-        "${redis.id}.service"
-        "${db.id}.service"
-      ];
-      Requires = [
-        "${redis.id}.service"
-        "${db.id}.service"
-      ];
-    };
-    containerConfig = {
-      image = "ghcr.io/immich-app/immich-server:${versionTag}";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [ ];
-      noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${server.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-        "${internalNet}"
-      ];
-      volumes = [
-        "${server.id}:/data"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+  virtualisation.quadlet = {
+    networks = {
+      "${publicNet}" = { };
+      "${internalNet}" = {
+        networkConfig = {
+          internal = true;
+        };
       };
     };
-  };
-
-  virtualisation.quadlet.volumes."${ml.id}" = { };
-  virtualisation.quadlet.containers.${ml.id} = {
-    containerConfig = {
-      image = "ghcr.io/immich-app/immich-machine-learning:${versionTag}";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [ ];
-      noNewPrivileges = true;
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      volumes = [
-        "${ml.id}:/cache"
-      ];
+    volumes = {
+      "${server.id}" = { };
+      "${ml.id}" = { };
+      "${db.id}" = { };
     };
-  };
+    containers = {
+      ${server.id} = {
+        unitConfig = {
+          After = [
+            "${redis.id}.service"
+            "${db.id}.service"
+          ];
+          Requires = [
+            "${redis.id}.service"
+            "${db.id}.service"
+          ];
+        };
+        containerConfig = {
+          image = "ghcr.io/immich-app/immich-server:${versionTag}";
+          dropCapabilities = [ "ALL" ];
+          addCapabilities = [ ];
+          noNewPrivileges = true;
+          environmentFiles = [ config.sops.templates."${server.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [
+            "${publicNet}"
+            "${internalNet}"
+          ];
+          volumes = [
+            "${server.id}:/data"
+          ];
+          labels = {
+            "traefik.enable" = "true";
+            "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
+            "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+          };
+        };
+      };
 
-  virtualisation.quadlet.containers.${redis.id} = {
-    containerConfig = {
-      image = "docker.io/valkey/valkey:9";
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      healthCmd = "valkey-cli ping | grep -q PONG";
-      healthRetries = 2;
-      healthInterval = "30s";
-      healthTimeout = "10s";
-      healthStartPeriod = "120s";
-      healthStartupInterval = "5s";
-    };
-  };
+      ${ml.id} = {
+        containerConfig = {
+          image = "ghcr.io/immich-app/immich-machine-learning:${versionTag}";
+          dropCapabilities = [ "ALL" ];
+          addCapabilities = [ ];
+          noNewPrivileges = true;
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          volumes = [
+            "${ml.id}:/cache"
+          ];
+        };
+      };
 
-  virtualisation.quadlet.volumes."${db.id}" = { };
-  virtualisation.quadlet.containers.${db.id} = {
-    containerConfig = {
-      image = "ghcr.io/immich-app/postgres:${db.versionTag}";
-      shmSize = "128mb";
-      environmentFiles = [ config.sops.templates."${db.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      volumes = [
-        "${db.id}:/var/lib/postgresql"
-      ];
+      ${redis.id} = {
+        containerConfig = {
+          image = "docker.io/valkey/valkey:9";
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          healthCmd = "valkey-cli ping | grep -q PONG";
+          healthRetries = 2;
+          healthInterval = "30s";
+          healthTimeout = "10s";
+          healthStartPeriod = "120s";
+          healthStartupInterval = "5s";
+        };
+      };
+
+      ${db.id} = {
+        containerConfig = {
+          image = "ghcr.io/immich-app/postgres:${db.versionTag}";
+          shmSize = "128mb";
+          environmentFiles = [ config.sops.templates."${db.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          volumes = [
+            "${db.id}:/var/lib/postgresql"
+          ];
+        };
+      };
     };
   };
 }

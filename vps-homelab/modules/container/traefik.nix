@@ -8,7 +8,7 @@
 let
   uid = toString osConfig.users.users.containers.uid;
   allNetworks = config.virtualisation.quadlet.networks;
-  publicNetworks = lib.filterAttrs (_: net: (net.networkConfig.internal or null) != true) allNetworks;
+  publicNetworks = lib.filterAttrs (_: net: net.networkConfig.internal != true) allNetworks;
   publicNetworkNames = lib.attrNames publicNetworks;
 
   id = "traefik-proxy";

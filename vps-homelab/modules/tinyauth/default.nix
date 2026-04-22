@@ -22,7 +22,7 @@ in
   };
 
   virtualisation.oci-containers.containers.tinyauth = {
-    image = cfg.image;
+    inherit (cfg) image;
     ports = [ "${cfg.hostPort}:${cfg.containerPort}" ];
 
     environment = {

@@ -25,22 +25,28 @@ in
     }
   ];
 
-  sops.secrets."cf_api_email" = { };
-  sops.secrets."cf_dns_api_token" = { };
-  sops.templates."traefik.env" = {
-    content = ''
-      CF_API_EMAIL=${config.sops.placeholder."cf_api_email"}
-      CF_DNS_API_TOKEN=${config.sops.placeholder."cf_dns_api_token"}
-    '';
-  };
+  sops = {
+    secrets = {
+      "cf_api_email" = { };
+      "cf_dns_api_token" = { };
 
-  sops.secrets."pangolin_server_secret" = { };
-  sops.secrets."pangolin_setup_token" = { };
-  sops.templates."pangolin.env" = {
-    content = ''
-      SERVER_SECRET=${config.sops.placeholder."pangolin_server_secret"}
-      PANGOLIN_SETUP_TOKEN=${config.sops.placeholder."pangolin_setup_token"}
-    '';
+      "pangolin_server_secret" = { };
+      "pangolin_setup_token" = { };
+    };
+    templates = {
+      "traefik.env" = {
+        content = ''
+          CF_API_EMAIL=${config.sops.placeholder."cf_api_email"}
+          CF_DNS_API_TOKEN=${config.sops.placeholder."cf_dns_api_token"}
+        '';
+      };
+      "pangolin.env" = {
+        content = ''
+          SERVER_SECRET=${config.sops.placeholder."pangolin_server_secret"}
+          PANGOLIN_SETUP_TOKEN=${config.sops.placeholder."pangolin_setup_token"}
+        '';
+      };
+    };
   };
 
   security.acme.defaults.email = "acme.visible258@aleeas.com";

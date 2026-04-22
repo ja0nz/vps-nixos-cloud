@@ -14,15 +14,17 @@ let
   dataDir = "/var/lib/beszel-agent";
 in
 {
-  sops.secrets."beszel_token" = { };
-  sops.secrets."beszel_sshKey" = { };
-  sops.templates."beszel.env" = {
-    content = ''
-      DATA_DIR=${dataDir}
-      KEY=${config.sops.placeholder."beszel_sshKey"}
-      TOKEN=${config.sops.placeholder."beszel_token"}
-      HUB_URL=https://monitor.${vars.DOMAIN}
-    '';
+  sops = {
+    secrets."beszel_token" = { };
+    secrets."beszel_sshKey" = { };
+    templates."beszel.env" = {
+      content = ''
+        DATA_DIR=${dataDir}
+        KEY=${config.sops.placeholder."beszel_sshKey"}
+        TOKEN=${config.sops.placeholder."beszel_token"}
+        HUB_URL=https://monitor.${vars.DOMAIN}
+      '';
+    };
   };
 
   systemd.services.beszel-agent.serviceConfig.StateDirectory = "beszel-agent";

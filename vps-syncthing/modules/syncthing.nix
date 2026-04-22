@@ -6,9 +6,7 @@
     Basic configuration without strictly managing devices/folders
   - Proxy: http://localhost:8384
 */
-{
-  ...
-}:
+_:
 
 let
   dataDir = "/var/lib/syncthing";

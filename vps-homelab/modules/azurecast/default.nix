@@ -28,7 +28,7 @@ in
   };
 
   virtualisation.oci-containers.containers.azuracast = {
-    image = cfg.image;
+    inherit (cfg) image;
     ports = [
       "${cfg.hostPort}:${cfg.containerPort}"
       "2022:2022" # SFTP

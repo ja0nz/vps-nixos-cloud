@@ -10,17 +10,19 @@
 }:
 
 {
-  sops.secrets."newt_id" = {
-    sopsFile = ../secrets/homelab.enc.yaml;
-  };
-  sops.secrets."newt_secret" = {
-    sopsFile = ../secrets/homelab.enc.yaml;
-  };
-  sops.templates."newt.env" = {
-    content = ''
-      NEWT_ID=${config.sops.placeholder."newt_id"}
-      NEWT_SECRET=${config.sops.placeholder."newt_secret"}
-    '';
+  sops = {
+    secrets."newt_id" = {
+      sopsFile = ../secrets/homelab.enc.yaml;
+    };
+    secrets."newt_secret" = {
+      sopsFile = ../secrets/homelab.enc.yaml;
+    };
+    templates."newt.env" = {
+      content = ''
+        NEWT_ID=${config.sops.placeholder."newt_id"}
+        NEWT_SECRET=${config.sops.placeholder."newt_secret"}
+      '';
+    };
   };
 
   services.newt = {

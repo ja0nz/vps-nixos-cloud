@@ -28,24 +28,26 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.volumes."${id}" = { };
-  virtualisation.quadlet.containers.${id} = {
-    containerConfig = {
-      image = "ghcr.io/gethomepage/homepage:latest";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [ ];
-      noNewPrivileges = true;
-      environments.TZ = osConfig.time.timeZone;
-      environments.HOMEPAGE_ALLOWED_HOSTS = vars.DOMAIN;
-      networks = [ "${publicNet}" ];
-      volumes = [
-        "${id}:/app/config"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = "Host(`${vars.DOMAIN}`)";
-        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+  virtualisation.quadlet = {
+    networks."${publicNet}" = { };
+    volumes."${id}" = { };
+    containers.${id} = {
+      containerConfig = {
+        image = "ghcr.io/gethomepage/homepage:latest";
+        dropCapabilities = [ "ALL" ];
+        addCapabilities = [ ];
+        noNewPrivileges = true;
+        environments.TZ = osConfig.time.timeZone;
+        environments.HOMEPAGE_ALLOWED_HOSTS = vars.DOMAIN;
+        networks = [ "${publicNet}" ];
+        volumes = [
+          "${id}:/app/config"
+        ];
+        labels = {
+          "traefik.enable" = "true";
+          "traefik.http.routers.${id}.rule" = "Host(`${vars.DOMAIN}`)";
+          "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+        };
       };
     };
   };

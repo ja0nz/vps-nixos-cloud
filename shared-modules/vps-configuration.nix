@@ -1,6 +1,4 @@
-{
-  ...
-}:
+_:
 
 {
   # Basic system configuration

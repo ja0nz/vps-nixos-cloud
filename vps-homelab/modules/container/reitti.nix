@@ -38,24 +38,27 @@ let
 in
 {
 
-  sops.secrets."reitti_postgis_password" = { };
-  sops.templates."${server.id}.env" = {
-    content = ''
-      POSTGIS_USER=reitti
-      POSTGIS_PASSWORD=${config.sops.placeholder."reitti_postgis_password"}
-      POSTGIS_DB=${postgis.id}
-      POSTGIS_HOST=${postgis.id}
-    '';
-  };
+  sops = {
+    secrets."reitti_postgis_password" = { };
+    templates = {
+      "${server.id}.env" = {
+        content = ''
+          POSTGIS_USER=reitti
+          POSTGIS_PASSWORD=${config.sops.placeholder."reitti_postgis_password"}
+          POSTGIS_DB=${postgis.id}
+          POSTGIS_HOST=${postgis.id}
+        '';
+      };
+      "${postgis.id}.env" = {
+        content = ''
+          POSTGRES_USER=reitti
+          POSTGRES_DB=${postgis.id}
+          POSTGRES_INITDB_ARGS='--data-checksums'
 
-  sops.templates."${postgis.id}.env" = {
-    content = ''
-      POSTGRES_USER=reitti
-      POSTGRES_DB=${postgis.id}
-      POSTGRES_INITDB_ARGS='--data-checksums'
-
-      POSTGRES_PASSWORD=${config.sops.placeholder."reitti_postgis_password"}
-    '';
+          POSTGRES_PASSWORD=${config.sops.placeholder."reitti_postgis_password"}
+        '';
+      };
+    };
   };
 
   # Define pangolin public-resources
@@ -87,100 +90,108 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.networks."${internalNet}" = {
-    networkConfig = {
-      internal = true;
-    };
-  };
-  virtualisation.quadlet.volumes."${server.id}" = { };
-  virtualisation.quadlet.containers.${server.id} = {
-    unitConfig = {
-      After = [
-        "${redis.id}.service"
-        "${postgis.id}.service"
-        "${tileCache.id}.service"
-      ];
-      Requires = [
-        "${redis.id}.service"
-        "${postgis.id}.service"
-        "${tileCache.id}.service"
-      ];
-    };
-    containerConfig = {
-      image = "ghcr.io/dedicatedcode/reitti:${versionTag}";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [
-        "CHOWN"
-        "SETGID"
-        "SETUID"
-      ];
-      noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${server.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-        "${internalNet}"
-      ];
-      volumes = [
-        "${server.id}:/data/"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+  virtualisation.quadlet = {
+    networks = {
+      "${publicNet}" = { };
+      "${internalNet}" = {
+        networkConfig = {
+          internal = true;
+        };
       };
     };
-  };
-
-  virtualisation.quadlet.volumes."${tileCache.id}" = { };
-  virtualisation.quadlet.containers.${tileCache.id} = {
-    containerConfig = {
-      image = "ghcr.io/dedicatedcode/reitti-tile-cache:${versionTag}";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [
-        "CHOWN"
-        "SETUID"
-        "SETGID"
-        "NET_BIND_SERVICE"
-      ];
-      noNewPrivileges = true;
-      environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-        "${internalNet}"
-      ];
-      volumes = [
-        "${tileCache.id}:/var/cache/nginx"
-      ];
+    volumes = {
+      "${server.id}" = { };
+      "${tileCache.id}" = { };
+      "${postgis.id}" = { };
     };
-  };
+    containers = {
+      ${server.id} = {
+        unitConfig = {
+          After = [
+            "${redis.id}.service"
+            "${postgis.id}.service"
+            "${tileCache.id}.service"
+          ];
+          Requires = [
+            "${redis.id}.service"
+            "${postgis.id}.service"
+            "${tileCache.id}.service"
+          ];
+        };
+        containerConfig = {
+          image = "ghcr.io/dedicatedcode/reitti:${versionTag}";
+          dropCapabilities = [ "ALL" ];
+          addCapabilities = [
+            "CHOWN"
+            "SETGID"
+            "SETUID"
+          ];
+          noNewPrivileges = true;
+          environmentFiles = [ config.sops.templates."${server.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [
+            "${publicNet}"
+            "${internalNet}"
+          ];
+          volumes = [
+            "${server.id}:/data/"
+          ];
+          labels = {
+            "traefik.enable" = "true";
+            "traefik.http.routers.${server.id}.rule" = "Host(`${url}`)";
+            "traefik.http.services.${server.id}.loadbalancer.server.port" = server.containerPort;
+          };
+        };
+      };
 
-  virtualisation.quadlet.volumes."${postgis.id}" = { };
-  virtualisation.quadlet.containers.${postgis.id} = {
-    containerConfig = {
-      image = "docker.io/postgis/postgis:${postgis.versionTag}";
-      shmSize = "128mb";
-      environmentFiles = [ config.sops.templates."${postgis.id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      volumes = [
-        "${postgis.id}:/var/lib/postgresql"
-      ];
-    };
-  };
+      ${tileCache.id} = {
+        containerConfig = {
+          image = "ghcr.io/dedicatedcode/reitti-tile-cache:${versionTag}";
+          dropCapabilities = [ "ALL" ];
+          addCapabilities = [
+            "CHOWN"
+            "SETUID"
+            "SETGID"
+            "NET_BIND_SERVICE"
+          ];
+          noNewPrivileges = true;
+          environments.TZ = osConfig.time.timeZone;
+          networks = [
+            "${publicNet}"
+            "${internalNet}"
+          ];
+          volumes = [
+            "${tileCache.id}:/var/cache/nginx"
+          ];
+        };
+      };
 
-  virtualisation.quadlet.containers.${redis.id} = {
-    containerConfig = {
-      image = "docker.io/redis:7-alpine";
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${internalNet}" ];
-      healthCmd = "redis-cli ping | grep -q PONG";
-      healthRetries = 2;
-      healthInterval = "30s";
-      healthTimeout = "10s";
-      healthStartPeriod = "120s";
-      healthStartupInterval = "5s";
+      ${postgis.id} = {
+        containerConfig = {
+          image = "docker.io/postgis/postgis:${postgis.versionTag}";
+          shmSize = "128mb";
+          environmentFiles = [ config.sops.templates."${postgis.id}.env".path ];
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          volumes = [
+            "${postgis.id}:/var/lib/postgresql"
+          ];
+        };
+      };
+
+      ${redis.id} = {
+        containerConfig = {
+          image = "docker.io/redis:7-alpine";
+          environments.TZ = osConfig.time.timeZone;
+          networks = [ "${internalNet}" ];
+          healthCmd = "redis-cli ping | grep -q PONG";
+          healthRetries = 2;
+          healthInterval = "30s";
+          healthTimeout = "10s";
+          healthStartPeriod = "120s";
+          healthStartupInterval = "5s";
+        };
+      };
     };
   };
 }

@@ -1,9 +1,17 @@
 {
   description = "devShell tooling";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    pre-commit-hooks.url = "github:cachix/git-hooks.nix";
+  };
 
   outputs =
-    { nixpkgs, ... }:
+    {
+      self,
+      nixpkgs,
+      pre-commit-hooks,
+      ...
+    }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -15,6 +23,17 @@
       );
     in
     {
+      checks.${system}.pre-commit-check = pre-commit-hooks.lib.x86_64-linux.run {
+        src = ./.;
+        hooks = {
+          nixfmt-rfc-style.enable = true; # or nixpkgs-fmt
+          statix.enable = true; # lints anti-patterns
+          deadnix.enable = true; # removes unused bindings
+          flake-checker.enable = true; # checks flake inputs health
+        };
+      };
+
+      formatter.x86_64-linux = pkgs.nixfmt-tree;
       devShells.${system}.default = pkgs.mkShell {
         buildInputs =
           with pkgs;
@@ -31,7 +50,7 @@
             pangolin-cli
           ]
           ++ (builtins.attrValues scripts);
-        shellHook = ''
+        shellHook = self.checks.${system}.pre-commit-check.shellHook + ''
           echo -e "\033[1;33m╭─── 🛠  available commands ───────────────────╮\033[0m"
           echo -e "${helpText}"
           echo -e "\033[1;33m╰──────────────────────────────────────────────╯\033[0m"

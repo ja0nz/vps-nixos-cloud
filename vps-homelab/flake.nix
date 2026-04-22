@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.follows = "tooling/nixpkgs";
+    pre-commit-hooks.follows = "tooling/pre-commit-hooks";
     tooling.url = "path:..";
 
     impermanence.url = "github:nix-community/impermanence";
@@ -86,35 +87,32 @@
           ./shared-modules/microvm-configuration.nix
 
           # Special Development settings
-          (
-            { ... }:
-            {
-              microvm = {
-                # Home Manager
-                writableStoreOverlay = "/nix/.rw-store";
-                # Podman user
-                volumes = [
-                  {
-                    mountPoint = "/home/containers";
-                    image = "./.home-container.img";
-                    size = 8000; # 8GB
-                  }
-                ];
+          (_: {
+            microvm = {
+              # Home Manager
+              writableStoreOverlay = "/nix/.rw-store";
+              # Podman user
+              volumes = [
+                {
+                  mountPoint = "/home/containers";
+                  image = "./.home-container.img";
+                  size = 8000; # 8GB
+                }
+              ];
+            };
+            systemd.services.fix-container-home-permissions = {
+              script = ''
+                chown -R containers:users /home/containers
+                chmod 700 /home/containers
+              '';
+              wantedBy = [ "multi-user.target" ];
+              before = [ "home-manager-containers.service" ]; # Run BEFORE HM tries to link files
+              serviceConfig = {
+                Type = "oneshot";
+                RemainAfterExit = true;
               };
-              systemd.services.fix-container-home-permissions = {
-                script = ''
-                  chown -R containers:users /home/containers
-                  chmod 700 /home/containers
-                '';
-                wantedBy = [ "multi-user.target" ];
-                before = [ "home-manager-containers.service" ]; # Run BEFORE HM tries to link files
-                serviceConfig = {
-                  Type = "oneshot";
-                  RemainAfterExit = true;
-                };
-              };
-            }
-          )
+            };
+          })
         ];
       };
 

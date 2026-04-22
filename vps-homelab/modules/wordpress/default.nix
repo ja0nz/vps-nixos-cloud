@@ -34,28 +34,34 @@ in
     '';
   };
 
-  sops.secrets."wordpress_db_password" = { };
-  sops.secrets."wordpress_root_password" = { };
-  sops.templates."mariaDB.env" = {
-    content = ''
-      MYSQL_ROOT_PASSWORD=${config.sops.placeholder."wordpress_root_password"}
-      MYSQL_DATABASE=wordpress
-      MYSQL_USER=wordpress
-      MYSQL_PASSWORD=${config.sops.placeholder."wordpress_db_password"}
-    '';
-  };
-  sops.templates."wordpress.env" = {
-    content = ''
-      WORDPRESS_DB_NAME=wordpress
-      WORDPRESS_DB_USER=wordpress
-      WORDPRESS_DB_HOST=wordpress-db:${cfg.db.port}
-      WORDPRESS_DB_PASSWORD=${config.sops.placeholder."wordpress_db_password"}
-    '';
+  sops = {
+    secrets = {
+      "wordpress_db_password" = { };
+      "wordpress_root_password" = { };
+    };
+    templates = {
+      "mariaDB.env" = {
+        content = ''
+          MYSQL_ROOT_PASSWORD=${config.sops.placeholder."wordpress_root_password"}
+          MYSQL_DATABASE=wordpress
+          MYSQL_USER=wordpress
+          MYSQL_PASSWORD=${config.sops.placeholder."wordpress_db_password"}
+        '';
+      };
+      "wordpress.env" = {
+        content = ''
+          WORDPRESS_DB_NAME=wordpress
+          WORDPRESS_DB_USER=wordpress
+          WORDPRESS_DB_HOST=wordpress-db:${cfg.db.port}
+          WORDPRESS_DB_PASSWORD=${config.sops.placeholder."wordpress_db_password"}
+        '';
+      };
+    };
   };
 
   virtualisation.oci-containers.containers = {
     wordpress = {
-      image = cfg.wp.image;
+      inherit (cfg.wp) image;
       ports = [ "${cfg.wp.hostPort}:${cfg.wp.containerPort}" ];
       environmentFiles = [
         config.sops.templates."wordpress.env".path
@@ -85,7 +91,7 @@ in
     # };
 
     wordpress-db = {
-      image = cfg.db.image;
+      inherit (cfg.db) image;
       environmentFiles = [
         config.sops.templates."mariaDB.env".path
       ];

@@ -5,7 +5,7 @@ let
   sopsExe = pkgs.lib.getExe pkgs.sops;
   cloudflaredExe = pkgs.lib.getExe pkgs.cloudflared;
   ncExe = pkgs.lib.getExe' pkgs.netcat-openbsd "nc";
-  bash = pkgs.bash;
+  inherit (pkgs) bash;
   mkScript =
     name: description: text:
     let

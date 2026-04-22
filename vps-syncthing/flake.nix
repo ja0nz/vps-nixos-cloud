@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.follows = "tooling/nixpkgs";
+    pre-commit-hooks.follows = "tooling/pre-commit-hooks";
     tooling.url = "path:..";
 
     impermanence.url = "github:nix-community/impermanence";

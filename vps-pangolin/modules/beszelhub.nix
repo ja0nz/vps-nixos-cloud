@@ -7,9 +7,7 @@
   - IMPORTANT: In reverse proxy add rule to bypass: api/beszel/agent-connect
   - Proxy: http://localhost:8090
 */
-{
-  ...
-}:
+_:
 
 let
   dataDir = "/var/lib/beszel-hub";

@@ -14,28 +14,30 @@ let
   url = "${subDomain}.${vars.DOMAIN}";
 in
 {
-  sops.secrets."grist_session_password" = { };
-  sops.templates."${id}.env" = {
-    content = ''
-      # https://support.getgrist.com/self-managed/
-      APP_HOME_URL=https://${url}
+  sops = {
+    secrets."grist_session_password" = { };
+    templates."${id}.env" = {
+      content = ''
+        # https://support.getgrist.com/self-managed/
+        APP_HOME_URL=https://${url}
 
-      GRIST_DEFAULT_EMAIL=hey@ja.nz
-      GRIST_DEFAULT_LOCALE=de-DE
-      GRIST_LOG_LEVEL=warn
-      GRIST_SANDBOX_FLAVOR=gvisor
-      GRIST_SINGLE_ORG=immo
-      GRIST_HIDE_UI_ELEMENTS=helpCenter,billing,templates,multiSite,multiAccounts,supportGrist,sendToDrive
-      GRIST_FORCE_LOGIN=true
-      GRIST_PAGE_TITLE_SUFFIX=
-      GRIST_SESSION_SECRET=${config.sops.placeholder."grist_session_password"}
+        GRIST_DEFAULT_EMAIL=hey@ja.nz
+        GRIST_DEFAULT_LOCALE=de-DE
+        GRIST_LOG_LEVEL=warn
+        GRIST_SANDBOX_FLAVOR=gvisor
+        GRIST_SINGLE_ORG=immo
+        GRIST_HIDE_UI_ELEMENTS=helpCenter,billing,templates,multiSite,multiAccounts,supportGrist,sendToDrive
+        GRIST_FORCE_LOGIN=true
+        GRIST_PAGE_TITLE_SUFFIX=
+        GRIST_SESSION_SECRET=${config.sops.placeholder."grist_session_password"}
 
-      # https://support.getgrist.com/install/oidc/
-      # GRIST_OIDC_IDP_ISSUER=
-      # GRIST_OIDC_IDP_CLIENT_ID=
-      # GRIST_OIDC_IDP_CLIENT_SECRET=
-      # GRIST_OIDC_IDP_END_SESSION_ENDPOINT=
-    '';
+        # https://support.getgrist.com/install/oidc/
+        # GRIST_OIDC_IDP_ISSUER=
+        # GRIST_OIDC_IDP_CLIENT_ID=
+        # GRIST_OIDC_IDP_CLIENT_SECRET=
+        # GRIST_OIDC_IDP_END_SESSION_ENDPOINT=
+      '';
+    };
   };
 
   # Define pangolin public-resources
@@ -67,31 +69,33 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.volumes."${id}" = { };
-  virtualisation.quadlet.containers.${id} = {
-    containerConfig = {
-      image = "docker.io/gristlabs/grist:latest";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [
-        "SETUID"
-        "SETGID"
-        "CHOWN"
-        "DAC_OVERRIDE" # grist writes to / so it needs root cap
-      ];
-      noNewPrivileges = true;
-      environmentFiles = [ config.sops.templates."${id}.env".path ];
-      environments.TZ = osConfig.time.timeZone;
-      networks = [
-        "${publicNet}"
-      ];
-      volumes = [
-        "${id}:/persist"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+  virtualisation.quadlet = {
+    networks."${publicNet}" = { };
+    volumes."${id}" = { };
+    containers.${id} = {
+      containerConfig = {
+        image = "docker.io/gristlabs/grist:latest";
+        dropCapabilities = [ "ALL" ];
+        addCapabilities = [
+          "SETUID"
+          "SETGID"
+          "CHOWN"
+          "DAC_OVERRIDE" # grist writes to / so it needs root cap
+        ];
+        noNewPrivileges = true;
+        environmentFiles = [ config.sops.templates."${id}.env".path ];
+        environments.TZ = osConfig.time.timeZone;
+        networks = [
+          "${publicNet}"
+        ];
+        volumes = [
+          "${id}:/persist"
+        ];
+        labels = {
+          "traefik.enable" = "true";
+          "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
+          "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+        };
       };
     };
   };

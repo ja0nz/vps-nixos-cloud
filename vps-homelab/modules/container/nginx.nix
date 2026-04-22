@@ -31,33 +31,35 @@ in
     ];
   };
 
-  virtualisation.quadlet.networks."${publicNet}" = { };
-  virtualisation.quadlet.volumes."${id}" = {
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStartPost = "${pkgs.coreutils}/bin/mkdir -p ${srv}";
+  virtualisation.quadlet = {
+    networks."${publicNet}" = { };
+    volumes."${id}" = {
+      serviceConfig = {
+        Type = "oneshot";
+        ExecStartPost = "${pkgs.coreutils}/bin/mkdir -p ${srv}";
+      };
     };
-  };
-  virtualisation.quadlet.containers.${id} = {
-    containerConfig = {
-      image = "docker.io/nginx:stable";
-      dropCapabilities = [ "ALL" ];
-      addCapabilities = [
-        "SETUID"
-        "SETGID"
-        "CHOWN"
-        "NET_BIND_SERVICE"
-      ];
-      noNewPrivileges = true;
-      environments.TZ = osConfig.time.timeZone;
-      networks = [ "${publicNet}" ];
-      volumes = [
-        "${srv}:/usr/share/nginx/html:ro"
-      ];
-      labels = {
-        "traefik.enable" = "true";
-        "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
-        "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+    containers.${id} = {
+      containerConfig = {
+        image = "docker.io/nginx:stable";
+        dropCapabilities = [ "ALL" ];
+        addCapabilities = [
+          "SETUID"
+          "SETGID"
+          "CHOWN"
+          "NET_BIND_SERVICE"
+        ];
+        noNewPrivileges = true;
+        environments.TZ = osConfig.time.timeZone;
+        networks = [ "${publicNet}" ];
+        volumes = [
+          "${srv}:/usr/share/nginx/html:ro"
+        ];
+        labels = {
+          "traefik.enable" = "true";
+          "traefik.http.routers.${id}.rule" = "Host(`${url}`)";
+          "traefik.http.services.${id}.loadbalancer.server.port" = containerPort;
+        };
       };
     };
   };
