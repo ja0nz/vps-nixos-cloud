@@ -6,6 +6,9 @@
 }:
 
 let
+  # See:
+  # https://github.com/dedicatedcode/reitti/blob/main/docker-compose.yml
+
   # Common
   subDomain = "places";
   publicNet = "reitti-net";
@@ -47,6 +50,7 @@ in
           POSTGIS_PASSWORD=${config.sops.placeholder."reitti_postgis_password"}
           POSTGIS_DB=${postgis.id}
           POSTGIS_HOST=${postgis.id}
+          REDIS_HOST=${redis.id}
         '';
       };
       "${postgis.id}.env" = {
@@ -101,6 +105,7 @@ in
     };
     volumes = {
       "${server.id}" = { };
+      "${redis.id}" = { };
       "${tileCache.id}" = { };
       "${postgis.id}" = { };
     };
@@ -184,6 +189,9 @@ in
           image = "docker.io/redis:7-alpine";
           environments.TZ = osConfig.time.timeZone;
           networks = [ "${internalNet}" ];
+          volumes = [
+            "${redis.id}:/data"
+          ];
           healthCmd = "redis-cli ping | grep -q PONG";
           healthRetries = 2;
           healthInterval = "30s";

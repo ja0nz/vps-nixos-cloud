@@ -41,8 +41,8 @@ in
 
       # -- Capability Hardening --
       # Only grant what is strictly needed: reading files (DAC_READ_SEARCH).
-      AmbientCapabilities = [ "cap_dac_read_search" ];
-      CapabilityBoundingSet = [ "cap_dac_read_search" ];
+      AmbientCapabilities = [ "CAP_DAC_READ_SEARCH" ];
+      CapabilityBoundingSet = [ "CAP_DAC_READ_SEARCH" ];
 
       # -- Process & System Hardening --
       NoNewPrivileges = true;
